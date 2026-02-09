@@ -1,121 +1,162 @@
-export const dynamic = 'force-dynamic'; // <--- הוספנו את זה
+export const dynamic = 'force-dynamic';
 import { query } from '@/lib/db';
 import { TrendChart, KosherPieChart, FactoryBarChart } from './components/DashboardCharts';
-import { Package, Scale, Activity, Beef } from 'lucide-react';
 
-// --- פונקציה לשליפת הנתונים (Server Side) ---
-async function getDashboardData() {
-  const kpiQuery = await query(`
-    SELECT 
-      SUM(pr.weight_kg) as total_weight,
-      SUM(pr.boxes) as total_boxes,
-      (SELECT SUM(cow_count + bull_count) FROM slaughter_batches) as total_heads,
-      ROUND((SUM(pr.weight_kg) / NULLIF((SELECT SUM(halak_kg_in + kosher_kg_in) FROM debone_batches), 0)) * 100, 1) as yield_percentage
-    FROM production_records pr
-  `);
+async function getData() {
+  try {
+    // 1. נתוני KPI ראשיים (סיכומים)
+    const kpiData = await query(`
+      SELECT 
+        SUM(pr.weight_kg) as total_weight,
+        SUM(pr.boxes) as total_boxes,
+        (SELECT SUM(cow_count + bull_count) FROM slaughter_batches) as total_heads,
+        -- חישוב תשואה (Yield) בסיסי: משקל יציאה חלקי משקל כניסה (אם קיים)
+        ROUND((SUM(pr.weight_kg) / NULLIF((SELECT SUM(halak_kg_in + kosher_kg_in) FROM debone_batches), 0)) * 100, 1) as yield_percentage
+      FROM production_records pr
+    `);
 
-  const trendQuery = await query(`
-    SELECT 
-      TO_CHAR(sb.date, 'DD/MM') as date,
-      SUM(pr.weight_kg) as weight
-    FROM production_records pr
-    JOIN work_orders w ON pr.work_id = w.work_id
-    JOIN slaughter_batches sb ON w.faena_id = sb.faena_id
-    GROUP BY sb.date
-    ORDER BY sb.date ASC
-  `);
+    // 2. גרף מגמה (Trend) - משקל לפי תאריך
+    // מכיוון שבנתונים החדשים יש לנו תאריכים דרך work_orders שמקושרים לשחיטה
+    // (או שנשתמש בתאריך ייצור אם הוספנו כזה, כרגע נשתמש בתאריך השחיטה כקירוב)
+    const trendData = await query(`
+      SELECT 
+        TO_CHAR(sb.date, 'DD/MM') as date,
+        SUM(pr.weight_kg) as weight
+      FROM production_records pr
+      JOIN work_orders w ON pr.work_id = w.work_id
+      JOIN slaughter_batches sb ON w.faena_id = sb.faena_id
+      GROUP BY sb.date
+      ORDER BY sb.date ASC
+    `);
 
-  const kosherQuery = await query(`
-    SELECT 
-      k.family as name,
-      SUM(pr.weight_kg) as value
-    FROM production_records pr
-    JOIN products p ON pr.item_id = p.item_id
-    JOIN kosher_registry k ON p.kosher_type = k.kosher_type
-    GROUP BY k.family
-  `);
+    // 3. התפלגות כשרות (Pie Chart) - התיקון הגדול!
+    // במקום לחפש טבלת כשרות נפרדת, אנחנו לוקחים את הטקסט ישירות מטבלת המוצרים
+    const kosherData = await query(`
+      SELECT 
+        p.kosher_type as name,
+        SUM(pr.weight_kg) as value
+      FROM production_records pr
+      JOIN products p ON pr.item_id = p.item_id
+      GROUP BY p.kosher_type
+    `);
 
-  const factoryQuery = await query(`
-    SELECT 
-      f.name,
-      SUM(pr.weight_kg) as production
-    FROM production_records pr
-    JOIN work_orders w ON pr.work_id = w.work_id
-    JOIN factories f ON w.factory_id = f.factory_id
-    GROUP BY f.name
-  `);
+    // 4. ביצועים לפי מפעל (Bar Chart)
+    const factoryData = await query(`
+      SELECT 
+        f.name as factory,
+        SUM(pr.weight_kg) as weight
+      FROM production_records pr
+      JOIN work_orders w ON pr.work_id = w.work_id
+      JOIN factories f ON w.factory_id = f.factory_id
+      GROUP BY f.name
+    `);
 
-  return {
-    kpi: kpiQuery.rows[0] || { total_weight: 0, total_boxes: 0, total_heads: 0, yield_percentage: 0 },
-    trend: trendQuery.rows.map((row: any) => ({ ...row, weight: Number(row.weight) })),
-    kosher: kosherQuery.rows.map((row: any) => ({ ...row, value: Number(row.value) })),
-    factory: factoryQuery.rows.map((row: any) => ({ ...row, production: Number(row.production) }))
-  };
+    return {
+      kpi: kpiData.rows[0] || { total_weight: 0, total_boxes: 0, total_heads: 0, yield_percentage: 0 },
+      trend: trendData.rows,
+      kosher: kosherData.rows,
+      factory: factoryData.rows
+    };
+  } catch (error) {
+    console.error('Database Error:', error);
+    return {
+      kpi: { total_weight: 0, total_boxes: 0, total_heads: 0, yield_percentage: 0 },
+      trend: [],
+      kosher: [],
+      factory: []
+    };
+  }
 }
 
-// --- רכיב התצוגה הראשי ---
-export default async function Dashboard() {
-  const data = await getDashboardData();
+export default async function Home() {
+  const data = await getData();
 
-  const KpiCard = ({ title, value, sub, icon: Icon, color }: any) => (
-    <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg flex items-center justify-between">
-      <div>
-        <p className="text-slate-400 text-sm font-medium mb-1">{title}</p>
-        <h3 className="text-3xl font-bold text-white">{value}</h3>
-        <p className="text-xs text-slate-500 mt-2">{sub}</p>
+  return (
+    <div className="p-6 space-y-6 bg-slate-900 min-h-screen text-slate-100" dir="rtl">
+      
+      {/* כותרת */}
+      <div className="flex justify-between items-center mb-6">
+        <div>
+          <h1 className="text-3xl font-bold text-blue-400">לוח בקרה ראשי</h1>
+          <p className="text-slate-400">מבט על נתוני הייצור בזמן אמת</p>
+        </div>
+        <div className="bg-blue-600 px-4 py-2 rounded-lg shadow-lg shadow-blue-900/50">
+          <span className="font-bold">סה"כ משקל: </span>
+          {Number(data.kpi.total_weight).toLocaleString()} ק"ג
+        </div>
       </div>
-      <div className={`p-4 rounded-full bg-opacity-20 ${color}`}>
-        <Icon className={`w-8 h-8 ${color.replace('bg-', 'text-')}`} />
+
+      {/* כרטיסי מידע (KPIs) */}
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+        <KpiCard title="סה״כ משקל (ק״ג)" value={Number(data.kpi.total_weight).toLocaleString()} icon="⚖️" color="blue" />
+        <KpiCard title="כמות ארגזים" value={Number(data.kpi.total_boxes).toLocaleString()} icon="📦" color="purple" />
+        <KpiCard title="ראשים (שחיטה)" value={Number(data.kpi.total_heads).toLocaleString()} icon="🐮" color="orange" />
+        <KpiCard title="תשואה (Yield)" value={`${data.kpi.yield_percentage}%`} icon="📈" color="green" />
+      </div>
+
+      {/* אזור הגרפים */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        {/* גרף מגמת ייצור */}
+        <div className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+          <h3 className="text-xl font-semibold mb-4 text-slate-200">מגמת ייצור יומית</h3>
+          <div className="h-64">
+            {data.trend.length > 0 ? (
+              <TrendChart data={data.trend} />
+            ) : (
+              <div className="h-full flex items-center justify-center text-slate-500">אין נתונים להצגה</div>
+            )}
+          </div>
+        </div>
+
+        {/* גרף כשרות + מפעלים */}
+        <div className="space-y-6">
+          {/* גרף עוגה - כשרות */}
+          <div className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+            <h3 className="text-xl font-semibold mb-4 text-slate-200">התפלגות כשרות</h3>
+            <div className="h-64">
+               {data.kosher.length > 0 ? (
+                <KosherPieChart data={data.kosher} />
+               ) : (
+                <div className="h-full flex items-center justify-center text-slate-500">אין נתונים להצגה</div>
+               )}
+            </div>
+          </div>
+
+          {/* גרף עמודות - מפעלים */}
+          <div className="bg-slate-800 p-4 rounded-xl shadow-lg border border-slate-700">
+             <h3 className="text-xl font-semibold mb-4 text-slate-200">ייצור לפי מפעל</h3>
+             <div className="h-48">
+               {data.factory.length > 0 ? (
+                 <FactoryBarChart data={data.factory} />
+               ) : (
+                 <div className="h-full flex items-center justify-center text-slate-500">אין נתונים להצגה</div>
+               )}
+             </div>
+          </div>
+        </div>
+
       </div>
     </div>
   );
+}
+
+// רכיב עזר לכרטיסי המידע (כדי לא לשכפל קוד)
+function KpiCard({ title, value, icon, color }: { title: string, value: string, icon: string, color: string }) {
+  const colors: Record<string, string> = {
+    blue: "bg-blue-500/10 border-blue-500/20 text-blue-400",
+    purple: "bg-purple-500/10 border-purple-500/20 text-purple-400",
+    orange: "bg-orange-500/10 border-orange-500/20 text-orange-400",
+    green: "bg-green-500/10 border-green-500/20 text-green-400",
+  };
 
   return (
-    // השינוי הוא כאן: השתמשנו ב-div פשוט במקום main
-    <div className="p-8"> 
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-500 bg-clip-text text-transparent">
-          לוח בקרה ראשי (Executive Overview)
-        </h1>
-        <p className="text-slate-400 mt-2">מבט על נתוני הייצור בכל המפעלים</p>
+    <div className={`p-4 rounded-xl border ${colors[color]} shadow-md flex items-center justify-between`}>
+      <div>
+        <p className="text-sm opacity-80 mb-1">{title}</p>
+        <p className="text-2xl font-bold text-slate-100">{value}</p>
       </div>
-
-      {/* KPI Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <KpiCard title="סה״כ ייצור (ק״ג)" value={Number(data.kpi.total_weight).toLocaleString()} sub="משקל נטו ארוז" icon={Scale} color="bg-blue-500 text-blue-500" />
-        <KpiCard title="אחוז תשואה (Yield)" value={`${data.kpi.yield_percentage}%`} sub="יחס כניסה מול יציאה" icon={Activity} color="bg-green-500 text-green-500" />
-        <KpiCard title="ארגזים מוכנים" value={Number(data.kpi.total_boxes).toLocaleString()} sub="סה״כ קרטונים במלאי" icon={Package} color="bg-purple-500 text-purple-500" />
-        <KpiCard title="ראשים שנשחטו" value={Number(data.kpi.total_heads).toLocaleString()} sub="בקר שנכנס לתהליך" icon={Beef} color="bg-orange-500 text-orange-500" />
-      </div>
-
-      {/* Charts Area */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        
-        {/* Trend Chart */}
-        <div className="lg:col-span-2 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg">
-          <h3 className="text-xl font-bold mb-6 text-slate-200">מגמת ייצור יומית (ק״ג)</h3>
-          <div className="h-[300px] w-full">
-            <TrendChart data={data.trend} />
-          </div>
-        </div>
-
-        {/* Pie Chart */}
-        <div className="bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg">
-          <h3 className="text-xl font-bold mb-6 text-slate-200">פילוח לפי משפחת כשרות</h3>
-          <div className="h-[300px] w-full flex justify-center items-center">
-            <KosherPieChart data={data.kosher} />
-          </div>
-        </div>
-
-        {/* Bar Chart */}
-        <div className="lg:col-span-3 bg-slate-900 p-6 rounded-xl border border-slate-800 shadow-lg">
-          <h3 className="text-xl font-bold mb-6 text-slate-200">ביצועים לפי מפעל (Total Production)</h3>
-          <div className="h-[250px] w-full">
-            <FactoryBarChart data={data.factory} />
-          </div>
-        </div>
-
-      </div>
+      <div className="text-3xl opacity-80">{icon}</div>
     </div>
   );
 }

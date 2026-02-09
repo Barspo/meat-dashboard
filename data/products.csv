@@ -1,0 +1,352 @@
+item_id,factory_code,name_spanish,name_hebrew,department,is_anatomical_x9,is_steak,freshness,kosher_type,breed,origin_country,customer
+7290000551098,,BRAZUELO 88 BANANITAS,8K מוכשר (בנניטה),carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290000551159,,Quijada,בשר ראש מוכשר קפוא,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290000551197,,LENGUA,לשון מוכשר קפוא,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290000551203,,GRASA,שומן מוכשר קפוא,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290000551909,,INTER COSTAL,אצבעות אנטריקוט קפוא מוכשר,carne,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290000632025,,INTERCOTELES,אצבעות אנטריקוט,carne,no,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000632872,,bife ancho L,סטייק עיין מיושן מוכשרL,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000638645,,TAPA DE BIFE,מכסה וורד הצלע בלוק,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000640617,,GRASA,שומן בקר בבלוק,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656823,,AGUJA CHUCK 2,צלעות מס 2,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656830,,PECHO,חזה מס 3,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656847,,PAETA,כתף מס 4,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656861,,MARUCHA,צלי כתף מס 5,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656885,,CHINGOLO,פילה מדומה מס 6,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656892,,T.DE AGUJA,מיכסה הצלע מס 7,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656946,,BRAZULEO,שריר מס 8,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656953,,COGOTE,צוואר מס 10 מגולגל,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000656991,,QUIJADA,בשר ראש לחיים,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000657127,,MOLLJA.DE CORAZON,שקדי בקר לצליה,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000658469,,BRAZULEO,שריר בננה מס 88,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000662350,,MOLLJA DE GRAGANTA,שקדי בקר לבישול,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290000663630,,bife ancho xl,אנטריקוט מיושן פרימיום מוכשרXL,carne,yes,no,FROZEN,KOSHER,normal,Urguay,TNUVA
+7290001128572,,TAPA DE BIFE 1BC,דקל-מכסה הסטייק בשר בקר קפוא מוכשר T,carne,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290001128718,,MOLLEJA  DE CORAZON,שקדים מוכשר קפוא,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290001690789,,TAPA DE BIFE 1B,דקל - מכסה הסטייק בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690796,,AGUJA 2,2 צלעות בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690802,,PECHO 3,3 חזה בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690819,,PALETA 4,4 כתף מרכזי בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690826,,MARUCHA 5,5 צלי כתף בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690833,,CHINGOLO 6,6 פילה מדומה בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690840,,TAPA DE AGUJA  7,7 מכסה הצלע בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290001690864,,ASADO,9 קשתית בשר בקר טרי,carne,no,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290002029816,,LENGUA,לשון בקר קפוא,MENUDENCIAS,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290002029847,,MIX,בקר קפוא שארית    7X,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290002105848,,BIFE ANCHO A1 FL FEED LOT,סטייק עין מיושן A1 בקר קפוא פיד לוט,carne,yes,yes,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002105947,,BRAZUELO 8 CON HUESO (usobuko) FEED LOT,שריר בקר קפוא עם עצם (אוסובוקו ) פיד לוט,CARNE CON HUESO,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290002109815,,BRAZUELO 88 BANANITAS,8K שריר הזרוע (פולי) בשר בקר טרי,carne,yes,no,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290002281764,,AGUJA 2,2 צלעות בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281788,,PECHO 3,3 חזה בשר בקר טרי מוכשר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281801,,PALETA 4,4 כתף מרכזי בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281825,,MARUCHA 5,5 צלי כתף בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281832,,CHINGOLO 6,6 פילה מדומה בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281849,,TAPA DE AGUJA  7,7 מכסה הצלע בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281856,,BRAZUELO 8,88 שריר הזרוע בשר בקר קפוא מוכשר-צרכני,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281863,,COGOTE  10,10 צוואר בשר בקר קפוא מוכשר,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002281870,,COGOTE RETAIL 1010,10 צוואר בשר בקר קפוא מוכשר-צרכני,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002298939,,MOLLEJA,גידים בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290002341864,,,גידים בקר קפוא חלק אורוגוואי,MENUDENCIAS,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290002402008,,BIFE ANCHO  XL FEED LOT,סטייק עין מיושן XL בקר קפוא פיד לוט,carne,yes,yes,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402039,,BIFE ANCHO  PREMIUM FEED LOT,סטייק עין  בקר קפוא פרימיום פיד לוט,carne,yes,yes,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402053,,AGUJA FEED LOT,צלעות 2  בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402152,,AGUJA RETAIL FEED LOT,צלעות 22 צרכני בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402169,,PECHO 3 ZG (CHATO) FEED LOT,חזה 3  בקר קפוא ZG פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402176,,PECHO 3ZGB - BLOCK  FEED LOT,חזה (אוזן ) ZGB בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402190,,PALETA 4TZ FEED LOT,כתף מרכזי 4  בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402206,,PALTA RETAIL 44 FEED LOT,כתף מרכזי 44 צרכני בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402213,,MARUCHA FEED LOT,צלי כתף 5 בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402220,,CHINGOLO FEED LOT,פילה מדומה 6 בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402268,,TAPA DE AGUJA retail FEED LOT,מכסה הצלע 7 צרכני בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402275,,BRAZUELO 88 FEED LOT,שריר הזרוע 88 צרכני בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402787,,BRAZUELO 8K BANNITAS FEED LOT,שריר הזרוע מיוחד K8 בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402794,,ASADO FEED LOT,קשתית (אסאדו) 9   בקר קפוא פיד לוט,carne,no,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402800,,BRAZUELO 888 FEED LOT,שריר הזרוע 888 צרכני בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402817,,COGOTE FEED LOT,צוואר 10   בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402824,,COGOTE RETAIL FEED LOT,צוואר 10 צרכני  בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002402831,,TAPA DE BIFE 1B FEED LOT,מכסה ורד הצלע (דקל) B1 בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290002420774,,TAPA DE BIFE 1BB,מכסה ורד הצלע BB1 בקר קפוא,carne,no,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290002420798,,TAPA DE BIFE 1BC,מכסה ורד הצלע BC1 בקר קפוא,carne,no,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290002444459,,ASADO,קשתית9 קפוא מוכשר,carne,no,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290002486855,,TAPA DE BEFE 1BC,מכסה ורד הצלע 1BC,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002486862,,BEFE ANCHO PRIMEUM,סטייק עין פרימיום,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002486879,,,צלעות בקר אונטריפ  2H,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002516682,,ASADO PRIMEUM,קשתית (אסאדו) 9   בקר קפוא פרימיום,carne,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290002516699,,ASADO CON HUESO PRIMEUM,קשתית (אסאדו)  בקר קפוא עם עצם פרימיום,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290002554448,,,סינטה G קפוא חלק אורוגוואי,MENAKER,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290002554516,,BEFE ANCHO,סטייק עין בקר קפוא,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554523,,BEFE ANCHO  XL,סטייק עין בקר קפוא XL,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554530,,INTER COSTAL,רצועות אנטריקוט,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554547,,AGUJA,צלעות בקר מס 2,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554554,,AGUJA RETAIL,צלעות בקר 22 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554561,,PECHO,חזה בקר מס 3,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554578,,PECHO RETAIL,חזה בקר 33 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554585,,PALETA,כתף בקר מס 4,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554592,,PALTA RETAIL,כתף בקר 44 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554608,,MARUCHA,צלי כתף מס 5,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554615,,CHINGOLO,פילה מדומה מס 6,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554639,,TAPA DE AGUJA 77 RETAIL,מכסה הצלע מס 77 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554646,,BRAZUELO,שריר מס 8,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554653,,BRAZUELO 88,שריר מס 88 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554660,,BRAZUELO 8K,שריר מס K8 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554677,,COGOTE,צוואר מס 10,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554684,,TAPA DE BEFE 1B,מכסה ורד הצלע 1B,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554691,,,מכסה ורד הצלע 1BB,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554707,,ASADO,אסאדו בקר קפוא,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554714,,GRASA,שומן קפוא G,MENUDENCIAS,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554721,,LENGUA,לשון בקר,MENUDENCIAS,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554738,,QUJIDA,בשר ראש,MENUDENCIAS,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554745,,TENDONES,גידים,MENUDENCIAS,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554752,,MOLLEJA,שקדי בקר,MENUDENCIAS,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554769,,MARUCHA RETAIL,צלי כתף מס 55,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002554776,,COGOTE RETAIL,צוואר מס 10 צרכני,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290002734413,,,שקדים בקר (לב) קפוא שארית אורוגוואי,MENUDENCIAS,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290002996224,,BIFE ANCHO,סטייק עין   A1 בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996231,,BIFE ANCHO  XL,סטייק עין   XL בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996248,,AGUJA,צלעות 2   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996255,,AGUJA RETAIL,צלעות 22   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996262,,PECHO,חזה 3  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996279,,PECHO RETAIL,חזה 33  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996286,,PALETA,כתף מרכזי 4  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996293,,MARUCHA,צלי כתף 5  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996309,,CHINGOLO,פילה מדומה 6  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996316,,TAPA DE AGUJA,מכסה הצלע 7  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996323,,BRAZUELO,שריר הזרוע 88   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996330,,BRAZUELO 8K BANANITAS,שריר הזרוע 8K   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996347,,COGOTE,צוואר 10   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996354,,TAPA DE BIFE 1B,מכסה ורד הצלע  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996378,,ASADO,אסאדו 9  בקר קפוא,carne,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996385,,,בשר בקר לחמין אסדו 99 צרכני קפוא מוכשר אורוגוואי,carne,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996408,,MOLLEJA,שומן בקר  קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996415,,MOLLEJA,לשון בקר  קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996422,,MOLLEJA,שקדים בקר לב קפוא מוכשר סופר ביף,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996439,,MOLLEJA,גידים בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996484,,MOLLEJA,בשר ראש  בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996491,,PALETA RETAIL,כתף מרכזי 44     בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996583,,BEFE ANCHO  PREMIUM,סטייק עין  בקר קפוא פרימיום,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996590,,,מכסה ורד הצלע BB1 קפוא מוכשר אורוגוואי,carne,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996675,,INTER COSTAL,אצבעות אנטריקוט בקר קפוא,carne,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996705,,TAPA DE BIFE 1BC,מכסה ורד הצלע BC1 בקר קפוא,carne,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290002996729,,COGOTE RETAIL,צוואר 101   בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290003920037,,ASADO CON HUESU,אסאדו בקר קפוא עם עצם,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920235,,HUESO,עצמות מוח בקר קפוא,CARNE CON HUESO,no,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920426,,AGUJA RETAIL,צלעות בקר 2 צרכני נתח (שקית),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920440,,BRAZUELO,מס 88 צרכני נתח (שקית),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920457,,MARUCHA,צלי כתף מס 5 צרכני נתח (שקית ),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920464,,CHINGOLO,מס 6 צרכני נתח (שקית),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920488,,PALTA RETAIL,כתף מרכזי בקר 4 צרכני נתח (שקית ),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290003920495,,COGOTE RETAIL,מס 10 צרכני נתח (שקית),carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290004034542,,mollejas,שקדים בקר גרון  קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290004075316,,TAPA DE AGUJA retail,מכסה הצלע 77  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075323,,INTERCOSTAL CON HUESO,אצבעות אנטרקוט  בקר קפוא עם עצם  (מיני אסאדו ),CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075330,,ASADO CON HUESO,קשתית (אסאדו)  בקר קפוא עם עצם,CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075347,,BRAZUELO 8 CON HUESO (usobuko),שריר בקר קפוא עם עצם (אוסובוקו ),CARNE CON HUESO,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075354,,BEFE ANCHO CON HUESO,סטייק עין בקר קפוא עם עצם,CARNE CON HUESO,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075361,,TAIL (RABO)  CON HUESO,זנב בקר קפוא עם עצם,CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075378,,HUESO,עצם מוח  בקר קפוא,CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075385,,HUESO (DE PECHO),עצמות (חזה ) בקר  קפוא,CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075392,,HUESO (DE COGOTE),עצמות (צוואר) בקר קפוא,CARNE CON HUESO,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075408,,OJO DE BIFE ANCHO  L -3.2,סטייק עין מיושן A1 בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075644,,OJO DE BIFE ANCHO  XL +3.2,סטייק עין מיושן XL בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075651,,OJO DE BIFE ANCHO   PRIMUEM,סטייק עין   פרימיום בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075668,,AGUJA,צלעות 2  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075675,,AGUJA RETAIL,צלעות 22 צרכני בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075682,,PECHO,חזה 3  בקר  מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075699,,PECHO RETAIL,חזה 3 צרכני בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075705,,PALETA,כתף מרכזי 4  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075781,,PALETA RETAIL,כתף מרכזי 44 צרכני  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075798,,MARUCHA,צלי כתף 5 בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075804,,CHINGOLO,פילה מדומה 6 בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075811,,TAPA DE AGUJA RETAIL,מכסה הצלע 7 בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075828,,BRAZUELO 8,שריר הזרוע 88  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075835,,BRAZUELO 88,שריר הזרוע 8K (בננות)  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075842,,ASADO,אסאדו 9  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075859,,COGOTE,צוואר 10  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004075866,,TAPA DE BIFE 1B,מכסה ורד הצלע (דקל) B1  בקר מצונן,carne,yes,no,CHILLED,Kosher SP,normal,Urguay,Off Jerusalem
+7290004229771,,TAPA DE BIFE 1B,דקל-מכסה הסטייק בשר בקר קפוא מוכשר D,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290004969370,,MOLLEJA,שומן בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290004969981,,,פיקנייה קפוא חלק אורוגוואי,MENAKER,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290005254622,,TAPA DE AGUJA,מכסה הצלע מס 7,carne,yes,no,FROZEN,RUBIN,normal,Urguay,Off Jerusalem
+7290005689864,,,צוואר 10 טרי מחפוד אורוגוואי,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290005689871,,,מכסה ורד הצלע (דקל B1) טרי מחפוד אורוגוואי,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290005689895,,ASADO,אסאדו 9  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290005692123,,BEFE ANCHO,סטייק עין מיושן A1 בקר קפוא,carne,yes,yes,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290005692130,,BEFE ANCHO  XL,סטייק עין מיושן XL בקר קפוא,carne,yes,yes,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290005692147,,BEFE ANCHO  PREMIUM,סטייק עין  בקר קפוא פרימיום,carne,yes,yes,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290005692178,,,סטייק עין מיושן A1 קפוא מוכשר רסקו אורוגוואי,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005692185,,,סטייק עין מיושן XL קפוא מוכשר רסקו אורוגוואי,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005692208,,,סטייק עין קפוא מוכשר פיד לוד רסקו אורוגוואי,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290005692598,,PECHO ZG,חזה  3 ZG  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005692604,,PECHO ZGB,חזה  3  ZGB  בקר קפוא,carne,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005693045,,AGUJA,צלעות 2  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693052,,AGUJA RETAIL,צלעות 22 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693076,,PECHO,חזה 3  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693083,,PECHO RETAIL,חזה 33 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693090,,PECHO ORJA,חזה 3 אוזן בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693106,,PALETA,כתף מרכזי 4  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693113,,PALTA RETAIL,כתף מרכזי 44 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693120,,MARUCHA,צלי כתף 5  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693137,,MARUCHA RETAIL,צלי כתף 55 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693144,,CHINGOLO,פילה מדומה 6 בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693151,,TAPA DE AGUJA,מכסה הצלע 7  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693168,,TAPA DE AGUJA RETAIL,מכסה הצלע 77 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693175,,BRAZUELO,שריר הזרוע 8  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693182,,BRAZUELO BANNITAS,שריר הזרוע 8K צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693199,,BEFE ANCHO PRIMUEM,סטייק עין פרימיום,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693205,,COGOTE,צוואר 10  בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693212,,COGOTE RETAI,צוואר 101 צרכני בקר קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693229,,TAPA DE BIFE 1B,מכסה ורד הצלע (דקל B1) קפוא,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693236,,ASADO,אסאדו 9 בקר קפוא,carne,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693250,,GRASA,שומן בקר G קפוא,MENUDENCIAS,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693267,,QUJIDA,בשר ראש בקר קפוא,MENUDENCIAS,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693281,,INTER COSTAL,אצבעות אנטרירקוט בקר קפוא,carne,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693304,,TAPA DE BIFE 1BC,מכסה וורד הצלע 1BC,carne,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693458,,,שקדים בקר (גרון) קפוא שארית אורוגוואי,MENUDENCIAS,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693502,,INTER COSTALcon hueso,אצבעות אנטרקוט  בקר קפוא עם עצם  (מיני אסאדו ),CARNE CON HUESO,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693656,,HUESO,עצמות מח בקר קפוא,CARNE CON HUESO,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693687,,HUESO,עצמות רגל בקר קפוא,CARNE CON HUESO,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693694,,BEFE ANCHO,סטייק עין בקר קפוא  A1,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693700,,BEFE ANCHO  XL,סטייק עין בקר קפוא שארית XL,carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693953,,ASADO RETAIL,אסאדו 99 צרכני בקר קפוא,carne,no,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693960,,MOLLEJA,שקדי בקר קפוא,MENUDENCIAS,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005693977,,,"בשר מספר 3,7,10 בלוק (2-3 טון)",carne,yes,no,FROZEN,SHERIT,normal,Urguay,Off Jerusalem
+7290005699337,,CHINGOLO,פילה מדומה - 6  בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699344,,TAPA DE AGUJA,מכסה הצלע - 7  בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699535,,COGOTE RETAIL,צוואר 10 צרכני בקר קפוא חלק אורוגוואי,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699689,,BRAZUELO (BANANITA),שריר (בנניטה) - K8 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699696,,BRAZUELO 88,שריר הזורע 88 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699702,,ASADO 9,קשתית (אסאדו ) בקר קפוא,carne,no,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699719,,ASADO 99 RETAIL,קשתית (אסאדו ) צרכני בקר קפוא,carne,no,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699733,,TAPE DE BIFE 1B,מכסה ורד הצלע- 1B  בקר קפוא,carne,no,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699740,,COGOTE,צוואר - 10 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699825,,BEFE ANCHO PRIMUEM,סטייק עין בקר קפוא פרימיום,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699863,,BEFE ANCHO PRIMUEM XL,סטייק עין פרימיום  XL בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699900,,AGUJA 2,צלעות - 2 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699917,,AGUJA RETAIL 22,צלעות 22 צרכני בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699924,,PECHO 3,חזה - 3 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699931,,PECHO 33 RETAIL,חזה - 33 צרכני בשר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699948,,PECHO ZG,חזה  בקר קפוא 3 ZG מוסדי,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699955,,PECHO 3ZGB BLOCK,חזה בקר קפוא 3 ZGB אוזן בלוק,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699962,,PALETA 4,כתף מרכזי - 4 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699979,,PALETA 44,כתף מרכזי 44 צרכני בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699986,,MARUCHA 5,צלי כתף - 5 בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005699993,,MARUCHA 55 RETAIL,צלי כתף 55 צרכני בקר קפוא,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005703607,,mollejas,שקדים בקר לב קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290005703652,,,סינטה 11 עגל קפוא מוכשר אורוגוואי,MENAKER,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005703669,,,"פילה בקר עד 2 ק""ג קפוא מוכשר אורוגוואי",MENAKER,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005703676,,,"פילה בקר מעל 2 ק""ג קפוא מוכשר אורוגוואי",MENAKER,no,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005703683,,MOLLEJA   (DE GARGANTA),שקדים (גרון ) בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005703690,,MOLLEJA   (DE CORAZÓN),שקדים (לב ) בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Kosher SP,normal,Urguay,Off Jerusalem
+7290005703706,,BEFE ANCHO,סטייק עין בקר קפוא  A1,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005703713,,BEFE ANCHO  XL,סטייק עין בקר קפוא  XL,carne,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005703737,,,פילה בקר G קפוא חלק אורוגוואי,MENAKER,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290005703744,,,פילה בקר קפוא חלק אורוגוואי,MENAKER,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290005703751,,,סינטה קפוא חלק אורוגוואי,MENAKER,no,no,FROZEN,KOSHER,normal,Urguay,Off Jerusalem
+7290005703768,,MOLLEJA,שקדים (גרון) בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290005703775,,MOLLEJA,שקדים (לב) בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290008006651,,CHINGOLO,פילה מדומה 6 בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008006668,,TAPA DE AGUJA RETAIL,מכסה הצלע 7 בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008006675,,BRAZUELO 8,שריר הזרוע 88  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008006729,,BRAZUELO 88,שריר הזרוע 8K (בננות)  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008218542,,INTERCOSTAL CON HUESO,אצבעות אנטרקוט  בקר קפוא עם עצם  (מיני אסאדו ),CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008218559,,ASADO CON HUESO,קשתית (אסאדו)  בקר קפוא עם עצם,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008218566,,BRAZUELO 8 CON HUESO (usobuko),שריר בקר קפוא עם עצם (אוסובוקו ),CARNE CON HUESO,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008218573,,BEFE ANCHO CON HUESO,סטייק עין בקר קפוא עם עצם,CARNE CON HUESO,yes,yes,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008218627,,BRAZUELO 888,שריר הזרוע 888  בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219006,,TAPA DE BIFE 1BC FEED LOT,מכסה ורד הצלע 1BC בקר קפוא פיד לוט,carne,yes,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219013,,INTER COSTAL FEED LOT,אצבעות אנטרקות בקר קפוא פיד לוט,carne,no,no,FROZEN,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219020,,,סטייק עין בקר קפוא עם עצם מחפוד אורוגוואי,CARNE CON HUESO,yes,no,FROZEN,MACFUD,normal,Urguay,Off Jerusalem
+7290008219037,,,קשתית (אסאדו) בקר קפוא עם עצם מחפוד אורוגוואי,CARNE CON HUESO,no,no,FROZEN,MACFUD,normal,Urguay,Off Jerusalem
+7290008219044,,,שריר בקר קפוא עם עצם (אוסובוקו ) מחפוד אורוגוואי,CARNE CON HUESO,yes,no,FROZEN,MACFUD,normal,Urguay,Off Jerusalem
+7290008219051,,,אצבעות אנטריקוט בקר קפוא עם עצם  (מיני אסאדו ) מחפוד אורוגו,CARNE CON HUESO,no,no,FROZEN,MACFUD,normal,Urguay,Off Jerusalem
+7290008219068,,OJO DE BIFE ANCHO  L -3.2 FEED LOT,סטייק עין מיושן A1 בקר טרי פיד לוט,carne,yes,yes,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219075,,OJO DE BIFE ANCHO  XL +3.2 FEED LOT,סטייק עין מיושן XL בקר טרי פיד לוט,carne,yes,yes,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219082,,OJO DE BIFE ANCHO   PRIMUEM FEED LOT,סטייק עין   פרימיום בקר טרי פיד לוט,carne,yes,yes,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219099,,AGUJA FEED LOT,צלעות 2  בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219105,,PECHO FEED LOT,חזה 3  בקר  טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219112,,PALETA FEED LOT,כתף מרכזי 4  בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219129,,MARUCHA FEED LOT,צלי כתף 5 בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219136,,CHINGOLO FEED LOT,פילה מדומה 6 בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219143,,TAPA DE AGUJA  FEED LOT,מכסה הצלע 7 בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219150,,COGOTE FEED LOT,צוואר 10  בקר  טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219167,,TAPA DE BIFE 1B FEED LOT,מכסה ורד הצלע (דקל) B1  בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219174,,BRAZUELO 8 FEED LOT,שריר הזרוע 88  בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219181,,BRAZUELO 8K FEED LOT,שריר הזרוע 8K (בננות)  בקר טרי פיד לוט,carne,yes,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219198,,ASADO FEED LOT,אסאדו 9  בקר טרי פיד לוט,carne,no,no,CHILLED,MACFUD,FEED LOT,Urguay,Off Jerusalem
+7290008219204,,BIFE ANCHO  FEED LOT,סטייק עין   A1 בקר קפוא פיד לוט,carne,yes,yes,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219211,,BIFE ANCHO  XL FEED LOT,סטייק עין   XL בקר קפוא פיד לוט,carne,yes,yes,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219228,,BEFE ANCHO  PREMIUM FEED LOT,סטייק עין  בקר קפוא פרימיום פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219235,,AGUJA FEED LOT,צלעות 2   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219242,,AGUJA RETAIL FEED LOT,צלעות 22   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219259,,PECHO FEED LOT,חזה 3  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219266,,PECHO RETAIL FEED LOT,חזה 33  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219273,,PECHO ZG FEED LOT,חזה  3 ZG  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219280,,PECHO ZGB FEED LOT,חזה  3  ZGB  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219297,,PALETA FEED LOT,כתף מרכזי 4  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219303,,PALETA RETAIL FEED LOT,כתף מרכזי 44     בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219310,,MARUCHA FEED LOT,צלי כתף 5  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219327,,CHINGOLO FEED LOT,פילה מדומה 6  בקר קפוא פיד לוט,carne,yes,yes,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219334,,TAPA DE AGUJA FEED LOT,מכסה הצלע 7  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219341,,TAPA DE AGUJA retail FEED LOT,מכסה הצלע 77  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219358,,BRAZUELO  FEED LOT,שריר הזרוע 88   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008219396,,INTERCOSTAL,אצבעות אנטריקוט בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290008219402,,MOLLEJA,בשר ראש בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Halak SP,normal,Urguay,Off Jerusalem
+7290008219419,,OJO DE BIFE ANCHO  L -3.2,סטייק עין מיושן A1 בקר מצונן,carne,yes,yes,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219426,,OJO DE BIFE ANCHO  XL +3.2,סטייק עין מיושן XL בקר מצונן,carne,yes,yes,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219433,,OJO DE BIFE ANCHO   PRIMUEM,סטייק עין   פרימיום בקר מצונן,carne,yes,yes,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219440,,AGUJA,צלעות 2  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219457,,PECHO,חזה 3  בקר  מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219464,,PECHO RETAIL,חזה 3 צרכני בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219471,,PALETA,כתף מרכזי 4  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219488,,PALETA RETAIL,כתף מרכזי 44 צרכני  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219495,,MARUCHA,צלי כתף 5 בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219587,,,חזה 3 בקר לא מקוצב קפוא מחפוד אורוגוואי,carne,yes,no,FROZEN,MACFUD,normal,Urguay,Off Jerusalem
+7290008219662,,TAIL (RABO)  CON HUESO,זנב בקר קפוא עם עצם,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219709,,AGUJA,צלעות 2  בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219716,,AGUJA RETAIL,צלעות 22 צרכני בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219723,,PECHO ZG (CHATO),חזה 3  בקר קפוא ZG,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219730,,PALETA,כתף מרכזי 4  בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219747,,PALTA RETAIL,כתף מרכזי 44 צרכני בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219754,,MARUCHA,צלי כתף 5 בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219761,,CHINGOLO,פילה מדומה 6 בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219778,,TAPA DE AGUJA,מכסה הצלע 7 מוסדי בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219785,,TAPA DE AGUJA retail,מכסה הצלע 77 צרכני בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219792,,BRAZUELO 88,שריר הזרוע 88 צרכני בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219808,,COGOTE,צוואר 10   בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219815,,PECHO RETAIL,חזה 33 צרכני בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219822,,COGOTE RETAIL,צוואר 10 צרכני  בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219839,,BRAZUELO 8K BANNITAS,שריר הזרוע מיוחד K8 בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219846,,INTER COSTAL,אצבעות אנטריקוט בקר קפוא,carne,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219853,,GRASA,שומן בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219860,,QUJIDA,בשר ראש בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219877,,LENGUA,לשון בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219884,,TENDONES,גידים בקר קפוא,MENUDENCIAS,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219891,,TAPA DE BEFE 1B,מכסה ורד הצלע (דקל) B1 בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219907,,TAPA DE BEFE 1BC,מכסה ורד הצלע 1BC בקר קפוא,carne,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219914,,ASADO RETAIL,קשתית (אסאדו) 9  צרכני  בקר קפוא,carne,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219921,,ASADO,קשתית (אסאדו) 9   בקר קפוא,carne,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219938,,PECHO ZGB - BLOCK,חזה (אוזן ) ZGB בקר קפוא,carne,yes,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219990,,AGUJA RETAIL,צלעות 22 צרכני בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008242516,,BRAZUELO 8K BANANITAS,שריר הזרוע 8K   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242523,,COGOTE FEED LOT,צוואר 10   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242530,,COGOTE RETAIL FEED LOT,צוואר 101   בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242547,,TAPA DE BIFE 1B FEED LOT,מכסה ורד הצלע  בקר קפוא פיד לוט,carne,yes,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242554,,TAPA DE BIFE 1BC FEED LOT,מכסה ורד הצלע BC1 בקר קפוא פיד לוט,carne,no,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242561,,ASADO FEED LOT,קשתית (אסאדו) 9  בקר קפוא פיד לוט,carne,no,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242578,,INTER COSTAL FEED LOT,אצבעות אנטריקוט בקר קפוא פיד לוט,carne,no,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242585,,INTERCOSTAL CON HUESO FEED LOT,אצבעות אנטרקוט  בקר קפוא עם עצם  (מיני אסאדו ) פיד לוט,CARNE CON HUESO,no,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008242592,,ASADO CON HUESO FEED LOT,קשתית (אסאדו)  בקר קפוא עם עצם פיד לוט,CARNE CON HUESO,no,no,FROZEN,Kosher SP,FEED LOT,Urguay,Off Jerusalem
+7290008351775,,BIFE ANCHO G,2 סטייק עין G בשר בקר קפוא מוכשר,carne,yes,yes,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290008351782,,BIFE ANCHO S,1 סטייק עין S בשר בקר קפוא מוכשר,carne,yes,yes,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290008351936,,BIFE ANCHO S,1 סטייק עין S בשר בקר קפוא מוכשר,carne,yes,yes,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290008351935,,BIFE ANCHO S,S1 עין מוכשר  טרי,carne,yes,yes,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290008351943,,BIFE ANCHO G,2 סטייק עין G בשר בקר קפוא מוכשר,carne,yes,yes,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+7290008351942,,BIFE ANCHO G,עין מוכשר  טרי G,carne,yes,yes,CHILLED,KOSHER,normal,Urguay,Neto Melinda
+7290005689864 ,,COGOTE,צוואר 10  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290005689871 ,,TAPA DE BIFE 1B,מכסה ורד הצלע (דקל) B1  בקר מצונן,carne,yes,no,CHILLED,MACFUD,normal,Urguay,Off Jerusalem
+7290008219648 ,,HUESO (DE PECHO),עצמות (חזה ) בקר  קפוא,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219655 ,,HUESO (DE COGOTE),עצמות (צוואר) בקר קפוא,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+7290008219679 ,,HUESO,עצם מוח  בקר קפוא,CARNE CON HUESO,no,no,FROZEN,Macfud,normal,Urguay,Off Jerusalem
+1,,AGUJA RETAIL 22,2 צלעות בשר בקר קפוא מוכשר צרכני,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+2,,PECHO 33 RETAIL,3 חזה בשר בקר טרי מוכשר קפוא מוכשר-צרכני,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
+3,,PALETA 44 RETAIL,4 כתף מרכזי בשר בקר קפוא מוכשר-צרכני,carne,yes,no,FROZEN,KOSHER,normal,Urguay,Neto Melinda
