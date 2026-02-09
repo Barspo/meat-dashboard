@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; // <--- הוספנו את זה
 import { query } from '@/lib/db';
 import { TrendChart, KosherPieChart, FactoryBarChart } from './components/DashboardCharts';
 import { Package, Scale, Activity, Beef } from 'lucide-react';

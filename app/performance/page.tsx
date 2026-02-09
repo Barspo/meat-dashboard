@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; // <--- הוספנו את זה
 import { query } from '@/lib/db';
 import PerformanceClient from './PerformanceClient';
 
