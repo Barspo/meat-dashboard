@@ -1,3 +1,4 @@
+export const dynamic = 'force-dynamic'; // <--- הוספנו את זה
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 

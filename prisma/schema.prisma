@@ -1,0 +1,92 @@
+generator client {
+  provider = "prisma-client"
+}
+
+datasource db {
+  provider = "postgresql"
+  // שים כאן את הכתובת הארוכה והאמיתית שלך מ-NEON בתוך הגרשיים
+  url      = "postgresql://neondb_owner:npg_cuiN2MZ5EThA@ep-dawn-bar-agscz9mj-pooler.c-2.eu-central-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
+}
+
+// --- המודלים שלך ---
+
+model debone_batches {
+  debone_id          Int                @id
+  date               DateTime?          @db.Date
+  halak_quarters_in  Int?               @default(0)
+  kosher_quarters_in Int?               @default(0)
+  halak_kg_in        Decimal?           @default(0) @db.Decimal(10, 2)
+  kosher_kg_in       Decimal?           @default(0) @db.Decimal(10, 2)
+  faena_id           Int?
+  slaughter_batches  slaughter_batches? @relation(fields: [faena_id], references: [faena_id], onDelete: NoAction, onUpdate: NoAction)
+  work_orders        work_orders[]
+}
+
+model factories {
+  factory_id        Int                 @id
+  name              String?             @db.VarChar(255)
+  country           String?             @db.VarChar(255)
+  factory_code      String?             @db.VarChar(10)
+  slaughter_batches slaughter_batches[]
+  work_orders       work_orders[]
+}
+
+model kosher_registry {
+  kosher_id Int     @id @default(autoincrement())
+  name      String? @db.VarChar(255)
+  family    String? @db.VarChar(255)
+}
+
+model production_records {
+  record_id   Int          @id @default(autoincrement())
+  work_id     Int?
+  item_id     String?      @db.VarChar(50)
+  units       Int?         @default(0)
+  boxes       Int?         @default(0)
+  weight_kg   Decimal?     @default(0.0) @db.Decimal(10, 2)
+  products    products?    @relation(fields: [item_id], references: [item_id], onDelete: NoAction, onUpdate: NoAction)
+  work_orders work_orders? @relation(fields: [work_id], references: [work_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model products {
+  item_id            String               @id @db.VarChar(50)
+  name_spanish       String?              @db.VarChar(255)
+  name_hebrew        String?              @db.VarChar(255)
+  department         String?              @db.VarChar(255)
+  is_anatomical      String?              @db.VarChar(50)
+  is_steak           String?              @db.VarChar(50)
+  freshness          String?              @db.VarChar(50)
+  kosher_type        String?              @db.VarChar(50)
+  breed              String?              @db.VarChar(100)
+  origin_country     String?              @db.VarChar(100)
+  customer           String?              @db.VarChar(100)
+  production_records production_records[]
+}
+
+model slaughter_batches {
+  faena_id        Int              @id
+  date            DateTime?        @db.Date
+  cow_count       Int?             @default(0)
+  bull_count      Int?             @default(0)
+  halak_count     Int?             @default(0)
+  kosher_count    Int?             @default(0)
+  rejected_pulmon Int?             @default(0)
+  rejected_panza  Int?             @default(0)
+  rejected_cajon  Int?             @default(0)
+  factory_id      Int?
+  debone_batches  debone_batches[]
+  factories       factories?       @relation(fields: [factory_id], references: [factory_id], onDelete: NoAction, onUpdate: NoAction)
+  work_orders     work_orders[]
+}
+
+model work_orders {
+  work_id            Int                  @id
+  factory_id         Int?
+  faena_id           Int?
+  debone_id          Int?
+  status             String?              @default("Open") @db.VarChar(50)
+  production_records production_records[]
+  debone_batches     debone_batches?      @relation(fields: [debone_id], references: [debone_id], onDelete: NoAction, onUpdate: NoAction)
+  factories          factories?           @relation(fields: [factory_id], references: [factory_id], onDelete: NoAction, onUpdate: NoAction)
+  slaughter_batches  slaughter_batches?   @relation(fields: [faena_id], references: [faena_id], onDelete: NoAction, onUpdate: NoAction)
+}

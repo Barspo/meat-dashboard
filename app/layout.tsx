@@ -1,34 +1,34 @@
-import './globals.css';
-import type { Metadata } from 'next';
-import { Rubik } from 'next/font/google'; 
-// וודא שהקובץ Sidebar קיים בתיקייה הנכונה
-import Sidebar from './components/Sidebar';
+import type { Metadata } from "next";
+import { Inter } from "next/font/google";
+import "./globals.css";
+import { Sidebar } from "@/components/Sidebar"; // שים לב שהתיקייה ב-root
+// import { Header } from "@/components/Header"; // אם יש לך
+import { SidebarProvider } from "@/components/SidebarContext";
 
-const rubik = Rubik({ subsets: ['latin', 'hebrew'] });
+const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: 'Meat Dashboard',
-  description: 'Advanced production analytics',
+  title: "MeatPro Dashboard",
+  description: "Production Management",
 };
 
 export default function RootLayout({
   children,
-}: {
+}: Readonly<{
   children: React.ReactNode;
-}) {
+}>) {
   return (
-    // כאן אנחנו מגדירים שהאתר הוא בעברית ומימין לשמאל
     <html lang="he" dir="rtl">
-      <body className={`${rubik.className} bg-slate-950 text-white flex min-h-screen`}>
-        
-        {/* כאן אנחנו שמים את התפריט שיופיע קבוע */}
-        <Sidebar />
-
-        {/* וכאן נכנס התוכן המשתנה (הדף הראשי, דף ביצועים וכו') */}
-        <div className="flex-1 overflow-y-auto h-screen bg-slate-950">
-          {children}
-        </div>
-
+      <body className={`${inter.className} flex h-screen overflow-hidden bg-slate-50`} suppressHydrationWarning={true}>
+        <SidebarProvider>
+          <Sidebar />
+          <div className="flex-1 flex flex-col h-screen overflow-hidden relative transition-all duration-300">
+             {/* <Header /> אם קיים */}
+            <main className="flex-1 overflow-y-auto p-6 md:p-8">
+              {children}
+            </main>
+          </div>
+        </SidebarProvider>
       </body>
     </html>
   );
