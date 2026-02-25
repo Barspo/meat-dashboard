@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getProductionData, getFactories, getLastProductionDate } from '@/app/actions/getProductionData';
+import { getSeasons, type Season } from '@/app/actions/settingsActions';
 import { 
   Calendar as CalendarIcon, 
   ChevronDown, 
@@ -28,11 +29,13 @@ interface Product {
   weight: number;
   units: number;
   boxes: number;
-  kosher: string;
+  kosher: string;       // 'Halak' | 'Muchshar'
+  kosherFamily: string; // family label (e.g. 'חלק' / 'מוכשר')
+  kosherType: string;   // specific type from kosher_families.name_hebrew
   department: string;
+  freshness: string;    // 'frozen' | 'chilled'
+  breed: string;        // 'normal' | 'feed lot'
   customer: string;
-  breed: string;
-  freshness: string;
   isX9: boolean;
   isSteak: boolean;
 }
@@ -62,12 +65,14 @@ interface ProductionData {
 
 interface FilterState {
   kosher: string;
+  kosherFamily: string;
+  kosherType: string;
   department: string;
-  customer: string;
+  freshness: string;
   breed: string;
+  customer: string;
   isX9: string;
   isSteak: string;
-  freshness: string;
 }
 
 export default function ProductionPage() {
@@ -75,6 +80,8 @@ export default function ProductionPage() {
   const [loading, setLoading] = useState(false);
   const [factories, setFactories] = useState<{id: string, name: string}[]>([]);
   const [selectedFactory, setSelectedFactory] = useState('0');
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [isSeasonOpen, setIsSeasonOpen] = useState(false);
   
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -86,14 +93,16 @@ export default function ProductionPage() {
   const [errorMsg, setErrorMsg] = useState('');
 
   // Filters
-  const [filters, setFilters] = useState<FilterState>({ 
-    kosher: 'all', 
-    department: 'all', 
-    customer: 'all', 
-    breed: 'all', 
-    isX9: 'all', 
-    isSteak: 'all', 
-    freshness: 'all' 
+  const [filters, setFilters] = useState<FilterState>({
+    kosher: 'all',
+    kosherFamily: 'all',
+    kosherType: 'all',
+    department: 'all',
+    freshness: 'all',
+    breed: 'all',
+    customer: 'all',
+    isX9: 'all',
+    isSteak: 'all'
   });
   
   const [hiddenProductIds, setHiddenProductIds] = useState<string[]>([]);
@@ -108,8 +117,9 @@ export default function ProductionPage() {
   // --- Init ---
   useEffect(() => {
     async function load() {
-      const list = await getFactories();
+      const [list, s] = await Promise.all([getFactories(), getSeasons()]);
       setFactories([{ id: '0', name: 'בחר מפעל...' }, ...list]);
+      setSeasons(s);
     }
     load();
   }, []);
@@ -144,17 +154,23 @@ export default function ProductionPage() {
 
   // --- Dynamic Options ---
   const dynamicOptions = useMemo(() => {
-    if (!data?.tableData) return { departments: [], customers: [], breeds: [] };
-    const deps = new Set<string>(), custs = new Set<string>(), breeds = new Set<string>();
-    data.tableData.forEach((row) => { 
-        if (row.department) deps.add(row.department); 
-        if (row.customer) custs.add(row.customer); 
-        if (row.breed) breeds.add(row.breed); 
+    if (!data?.tableData) return { departments: [], customers: [], kosherFamilies: [], kosherTypes: [], freshnessOpts: [], breedOpts: [] };
+    const deps = new Set<string>(), custs = new Set<string>(), kfams = new Set<string>(), ktypes = new Set<string>(), fresh = new Set<string>(), breeds = new Set<string>();
+    data.tableData.forEach((row) => {
+        if (row.department) deps.add(row.department);
+        if (row.customer) custs.add(row.customer);
+        if (row.kosherFamily) kfams.add(row.kosherFamily);
+        if (row.kosherType) ktypes.add(row.kosherType);
+        if (row.freshness) fresh.add(row.freshness);
+        if (row.breed) breeds.add(row.breed);
     });
-    return { 
-        departments: Array.from(deps).sort(), 
-        customers: Array.from(custs).sort(), 
-        breeds: Array.from(breeds).sort() 
+    return {
+        departments: Array.from(deps).sort(),
+        customers: Array.from(custs).sort(),
+        kosherFamilies: Array.from(kfams).sort(),
+        kosherTypes: Array.from(ktypes).sort(),
+        freshnessOpts: Array.from(fresh).sort(),
+        breedOpts: Array.from(breeds).sort()
     };
   }, [data]);
 
@@ -162,20 +178,21 @@ export default function ProductionPage() {
   const availableProducts = useMemo(() => {
     if (!data?.tableData) return [];
     return data.tableData.filter((item) => {
-      // Kosher Logic
-      if (filters.kosher !== 'all') { 
-         const isHalak = item.kosher.toLowerCase() === 'halak'; 
-         if (filters.kosher === 'halak' && !isHalak) return false; 
-         if (filters.kosher === 'muchshar' && isHalak) return false; 
+      // Kosher family (halak/muchshar)
+      if (filters.kosher !== 'all') {
+         const isHalak = item.kosher.toLowerCase() === 'halak';
+         if (filters.kosher === 'halak' && !isHalak) return false;
+         if (filters.kosher === 'muchshar' && isHalak) return false;
       }
-      // Standard Logic
+      // Kosher family label filter
+      if (filters.kosherFamily !== 'all' && item.kosherFamily !== filters.kosherFamily) return false;
+      // Specific kosher type
+      if (filters.kosherType !== 'all' && item.kosherType !== filters.kosherType) return false;
+      // Standard filters
       if (filters.department !== 'all' && item.department !== filters.department) return false;
-      if (filters.customer !== 'all' && item.customer !== filters.customer) return false;
-      if (filters.breed !== 'all' && item.breed !== filters.breed) return false;
-      
-      // Freshness Logic
-      // השרת כבר מחזיר "Fresh" או "Frozen" מנורמל.
       if (filters.freshness !== 'all' && item.freshness !== filters.freshness) return false;
+      if (filters.breed !== 'all' && item.breed !== filters.breed) return false;
+      if (filters.customer !== 'all' && item.customer !== filters.customer) return false;
 
       // Boolean Logic
       if (filters.isX9 !== 'all') { 
@@ -228,7 +245,7 @@ export default function ProductionPage() {
       {/* Top Toolbar */}
       <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-200 flex flex-wrap items-center gap-3 relative z-30">
         <div className="relative min-w-[200px] h-[40px]">
-           <select value={selectedFactory} onChange={(e) => setSelectedFactory(e.target.value)} className={`w-full h-full appearance-none pr-4 pl-10 rounded-xl border font-bold text-sm outline-none focus:ring-2 transition-all cursor-pointer ${selectedFactory === '0' ? 'bg-red-50 border-red-200 text-red-600' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
+           <select value={selectedFactory} onChange={(e) => setSelectedFactory(e.target.value)} className={`w-full h-full appearance-none pr-4 pl-10 rounded-xl border font-bold text-sm outline-none focus:ring-2 transition-all cursor-pointer ${selectedFactory === '0' ? 'bg-orange-50 border-orange-200 text-orange-600' : 'bg-slate-50 border-slate-200 text-slate-800'}`}>
              {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
            </select>
            <ChevronDown className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" size={16} />
@@ -264,6 +281,35 @@ export default function ProductionPage() {
            <ShortcutBtn label="השבוע הנוכחי" onClick={handleCurrentWeek} />
            <ShortcutBtn label="החודש הנוכחי" onClick={handleCurrentMonth} />
         </div>
+        {seasons.length > 0 && (
+          <div className="relative">
+            <button
+              onClick={() => setIsSeasonOpen(v => !v)}
+              className="px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:shadow-md transition-all flex items-center gap-1"
+            >
+              עונה <ChevronDown size={12} />
+            </button>
+            {isSeasonOpen && (
+              <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 shadow-xl rounded-xl z-50 min-w-[160px] py-1">
+                {seasons.map(s => (
+                  <button
+                    key={s.id}
+                    onClick={() => {
+                      setStartDate(new Date(s.start_date + 'T12:00:00'));
+                      setEndDate(new Date(s.end_date + 'T12:00:00'));
+                      setIsSeasonOpen(false);
+                    }}
+                    className="w-full text-right px-4 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between gap-2"
+                  >
+                    <span>{s.name}</span>
+                    {s.is_active && <span className="text-[10px] text-blue-600 font-bold">פעיל</span>}
+                  </button>
+                ))}
+              </div>
+            )}
+            {isSeasonOpen && <div className="fixed inset-0 z-40" onClick={() => setIsSeasonOpen(false)} />}
+          </div>
+        )}
       </div>
 
       {loading ? ( <div className="flex flex-col items-center justify-center py-32"><Loader2 className="animate-spin text-blue-600 mb-4" size={40}/><p className="text-slate-400">מעבד נתונים...</p></div> ) : !data ? ( <div className="flex flex-col items-center justify-center py-20 bg-slate-50 border-2 border-dashed border-slate-200 rounded-2xl"><AlertCircle className="text-slate-300 mb-4" size={48} /><h3 className="text-xl font-bold text-slate-500">{errorMsg || 'אנא בצע סינון כדי לראות נתונים'}</h3></div> ) : (
@@ -279,18 +325,18 @@ export default function ProductionPage() {
                     
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center justify-between min-h-[140px] hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-2 mb-1">
-                            <div className="bg-emerald-50 p-1.5 rounded-lg text-emerald-600"><Beef size={18}/></div>
+                            <div className="bg-blue-50 p-1.5 rounded-lg text-blue-600"><Beef size={18}/></div>
                             <span className="text-xs font-bold text-slate-500">כניסת רבעים</span>
                         </div>
                         <div className="text-3xl font-black text-slate-900 my-1">{data.summary.quarters.total.toLocaleString()}</div>
                         <div className="w-full mt-1">
                             <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-100 mb-2">
-                                <div className="bg-blue-500 h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%` }}></div>
-                                <div className="bg-orange-500 h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%` }}></div>
+                                <div className="bg-red-500 h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%` }}></div>
+                                <div className="bg-emerald-700 h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%` }}></div>
                             </div>
                             <div className="flex justify-center gap-3 text-[10px] font-bold">
-                                <div className="flex items-center gap-1 text-blue-700"><span className="w-1.5 h-1.5 rounded-full bg-blue-500"></span>חלק: {data.summary.quarters.halak}</div>
-                                <div className="flex items-center gap-1 text-orange-700"><span className="w-1.5 h-1.5 rounded-full bg-orange-500"></span>מוכשר: {data.summary.quarters.muchshar}</div>
+                                <div className="flex items-center gap-1 text-red-700"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>חלק: {data.summary.quarters.halak}</div>
+                                <div className="flex items-center gap-1 text-emerald-800"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>מוכשר: {data.summary.quarters.muchshar}</div>
                             </div>
                         </div>
                     </div>
@@ -301,20 +347,37 @@ export default function ProductionPage() {
             <section>
                 <SectionHeader title="ניתוח תפוקות" />
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                    <YieldCard title="תפוקה כללית" inVal={data.yields.total.in} outVal={data.yields.total.out} variant="neutral" />
-                    <YieldCard title="תפוקה - חלק" inVal={data.yields.halak.in} outVal={data.yields.halak.out} variant="blue" />
-                    <YieldCard title="תפוקה - מוכשר" inVal={data.yields.muchshar.in} outVal={data.yields.muchshar.out} variant="orange" />
-                    
-                    <YieldCard title="תפוקת נתחי X9 כללית" inVal={data.yields.total.in} outVal={data.yields.x9.total} variant="neutral" isX9 />
-                    <YieldCard title="תפוקת X9 חלק" inVal={data.yields.halak.in} outVal={data.yields.x9.halak} variant="blue" isX9 />
-                    <YieldCard title="תפוקת X9 מוכשר" inVal={data.yields.muchshar.in} outVal={data.yields.x9.muchshar} variant="orange" isX9 />
+                {/* Row 1: General yields */}
+                <div className="mb-2">
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <span className="text-[10px] font-black text-slate-400 uppercase tracking-widest">תפוקה כללית</span>
+                    <div className="flex-1 h-px bg-slate-200"></div>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <YieldCard title="כולל" inVal={data.yields.total.in} outVal={data.yields.total.out} variant="neutral" />
+                    <YieldCard title="חלק" inVal={data.yields.halak.in} outVal={data.yields.halak.out} variant="halak" />
+                    <YieldCard title="מוכשר" inVal={data.yields.muchshar.in} outVal={data.yields.muchshar.out} variant="muchshar" />
+                  </div>
+                </div>
+
+                {/* Row 2: X9 yields */}
+                <div className="mb-6 bg-slate-50 rounded-xl p-3 border border-slate-200">
+                  <div className="flex items-center gap-2 mb-2 px-1">
+                    <span className="text-[10px] font-black text-purple-500 uppercase tracking-widest">תפוקת נתחי X9</span>
+                    <div className="flex-1 h-px bg-purple-200"></div>
+                    <span className="text-[10px] bg-purple-100 text-purple-700 font-black px-2 py-0.5 rounded-full">X9</span>
+                  </div>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <YieldCard title="X9 כולל" inVal={data.yields.total.in} outVal={data.yields.x9.total} variant="neutral" isX9 />
+                    <YieldCard title="X9 חלק" inVal={data.yields.halak.in} outVal={data.yields.x9.halak} variant="halak" isX9 />
+                    <YieldCard title="X9 מוכשר" inVal={data.yields.muchshar.in} outVal={data.yields.x9.muchshar} variant="muchshar" isX9 />
+                  </div>
                 </div>
                 
                 <div className="flex flex-col md:flex-row items-stretch justify-center gap-4 max-w-5xl mx-auto">
                      <div className="flex-1 bg-white p-3 px-6 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
                         <div className="flex items-center gap-4">
-                           <div className="bg-rose-50 p-3 rounded-full text-rose-500 border border-rose-100"><UtensilsCrossed size={24}/></div>
+                           <div className="bg-purple-50 p-3 rounded-full text-purple-500 border border-purple-100"><UtensilsCrossed size={24}/></div>
                            <div>
                               <span className="block text-[11px] text-slate-400 font-bold uppercase tracking-wider">יחידות סטייקים</span>
                               <span className="text-3xl font-black text-slate-800">{data.yields.steaks.unitsHalak + data.yields.steaks.unitsMuchshar}</span>
@@ -322,24 +385,24 @@ export default function ProductionPage() {
                         </div>
                         <div className="flex gap-4">
                            <div className="text-center px-4 border-l border-slate-100">
-                              <span className="block text-[10px] text-blue-500 font-bold uppercase mb-1">חלק</span>
-                              <span className="text-xl font-bold text-slate-700">{data.yields.steaks.unitsHalak}</span>
+                              <span className="block text-[10px] text-red-600 font-bold uppercase mb-1">חלק</span>
+                              <span className="text-xl font-bold text-red-700">{data.yields.steaks.unitsHalak}</span>
                            </div>
                            <div className="text-center px-4">
-                              <span className="block text-[10px] text-orange-500 font-bold uppercase mb-1">מוכשר</span>
-                              <span className="text-xl font-bold text-slate-700">{data.yields.steaks.unitsMuchshar}</span>
+                              <span className="block text-[10px] text-emerald-700 font-bold uppercase mb-1">מוכשר</span>
+                              <span className="text-xl font-bold text-emerald-800">{data.yields.steaks.unitsMuchshar}</span>
                            </div>
                         </div>
                      </div>
 
-                     <div className={`flex-1 p-3 px-6 rounded-xl border-2 shadow-sm flex items-center justify-between ${isSteakYieldGood ? 'bg-emerald-50 border-emerald-100' : 'bg-red-50 border-red-100'}`}>
+                     <div className={`flex-1 p-3 px-6 rounded-xl border-2 shadow-sm flex items-center justify-between ${isSteakYieldGood ? 'bg-blue-50 border-blue-100' : 'bg-amber-50 border-amber-200'}`}>
                         <div>
                            <span className="block text-[11px] font-bold uppercase tracking-wide opacity-70 mb-1">אחוז סטייקים מ-X9</span>
-                           <span className={`text-4xl font-black ${isSteakYieldGood ? 'text-emerald-600' : 'text-red-600'}`}>
+                           <span className={`text-4xl font-black ${isSteakYieldGood ? 'text-blue-700' : 'text-amber-700'}`}>
                               {steakPercentage.toFixed(1)}%
                            </span>
                         </div>
-                        <div className={`px-4 py-1.5 rounded-lg text-xs font-bold ${isSteakYieldGood ? 'bg-emerald-200 text-emerald-900' : 'bg-red-200 text-red-900'}`}>
+                        <div className={`px-4 py-1.5 rounded-lg text-xs font-bold ${isSteakYieldGood ? 'bg-blue-200 text-blue-900' : 'bg-amber-200 text-amber-900'}`}>
                            {isSteakYieldGood ? 'תקין (10%-13%)' : 'חריגה מהיעד'}
                         </div>
                      </div>
@@ -354,30 +417,42 @@ export default function ProductionPage() {
                     <TableSummaryItem label='סה"כ פריטים' value={filteredSortedData.length.toLocaleString()} unit="שורות" icon={ListFilter} color="text-slate-600" />
                     <TableSummaryItem label='סה"כ משקל' value={tableTotals.weight.toLocaleString()} unit='ק"ג' icon={Scale} color="text-blue-600" />
                     <TableSummaryItem label='סה"כ יחידות' value={tableTotals.units.toLocaleString()} unit="יח'" icon={UtensilsCrossed} color="text-purple-600" />
-                    <TableSummaryItem label='סה"כ קופסאות' value={tableTotals.boxes.toLocaleString()} unit="קרטונים" icon={Box} color="text-emerald-600" />
+                    <TableSummaryItem label='סה"כ קופסאות' value={tableTotals.boxes.toLocaleString()} unit="קרטונים" icon={Box} color="text-indigo-600" />
                 </div>
 
-                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-4 mb-4">
-                   <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-8 gap-3">
-                      
-                      <div className="relative lg:col-span-1">
-                        <label className="text-[10px] font-bold text-slate-400 mb-1 block uppercase">סינון מוצרים</label>
-                        <button onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)} className="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 text-sm hover:bg-slate-100 h-[36px]">
-                          <span className="truncate text-xs font-bold">{hiddenProductIds.length === 0 ? 'הכל מוצג' : 'מותאם אישית'}</span>
-                          <ChevronDown size={14} className="text-slate-400" />
+                <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 mb-4">
+
+                   {/* Row 1: product picker + kosher filters */}
+                   <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+
+                      {/* Product picker */}
+                      <div className="relative col-span-2 md:col-span-1">
+                        <label className="text-[10px] font-bold text-slate-400 mb-1 block uppercase">שם מוצר</label>
+                        <button onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)} className="w-full flex items-center justify-between bg-slate-50 border border-slate-200 rounded-lg py-1.5 px-3 hover:bg-slate-100 h-[36px]">
+                          <span className="truncate text-xs font-bold text-slate-700">
+                            {hiddenProductIds.length === 0 ? 'הכל מוצג' : `${availableProducts.length - hiddenProductIds.length} / ${availableProducts.length}`}
+                          </span>
+                          <ChevronDown size={14} className="text-slate-400 shrink-0" />
                         </button>
                         {isProductDropdownOpen && (
-                          <div className="absolute top-full right-0 mt-2 w-64 bg-white rounded-xl shadow-xl border border-slate-200 z-50 p-2">
+                          <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-50 p-2">
+                            {/* Search */}
                             <div className="relative mb-2">
                               <Search size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
                               <input type="text" className="w-full bg-slate-50 border border-slate-100 rounded-lg text-xs py-2 pr-8 pl-2 outline-none" placeholder="הקלד שם..." value={productSearchTerm} onChange={(e) => setProductSearchTerm(e.target.value)} />
                             </div>
-                            <div className="max-h-48 overflow-y-auto space-y-1 custom-scrollbar">
+                            {/* Select all / deselect all */}
+                            <div className="flex items-center gap-2 mb-2 px-1">
+                              <button onClick={() => setHiddenProductIds([])} className="text-[10px] font-bold text-blue-600 hover:underline">בחר הכל</button>
+                              <span className="text-slate-300">|</span>
+                              <button onClick={() => setHiddenProductIds(availableProducts.map(p => p.id))} className="text-[10px] font-bold text-slate-400 hover:underline">בטל בחירה</button>
+                            </div>
+                            <div className="max-h-52 overflow-y-auto space-y-0.5">
                               {availableProducts.filter(p => p.name.includes(productSearchTerm)).map(p => {
                                 const isVisible = !hiddenProductIds.includes(p.id);
                                 return (
                                   <div key={p.id} onClick={() => toggleProductVisibility(p.id)} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer text-xs">
-                                    <div className={`flex items-center justify-center`}>{isVisible ? <CheckSquare size={16} className="text-slate-900" /> : <Square size={16} className="text-slate-300" />}</div>
+                                    {isVisible ? <CheckSquare size={16} className="text-slate-800 shrink-0" /> : <Square size={16} className="text-slate-300 shrink-0" />}
                                     <span className={`truncate ${isVisible ? 'text-slate-700 font-medium' : 'text-slate-400 line-through'}`}>{p.name}</span>
                                   </div>
                                 );
@@ -388,22 +463,24 @@ export default function ProductionPage() {
                         {isProductDropdownOpen && <div className="fixed inset-0 z-40" onClick={() => setIsProductDropdownOpen(false)}></div>}
                       </div>
 
-                      <FilterDropdown label="כשרות" value={filters.kosher} onChange={(val: string) => handleFilterChange('kosher', val)}>
+                      <FilterDropdown label="משפחת כשרות" value={filters.kosherFamily} onChange={(val: string) => handleFilterChange('kosherFamily', val)}>
                          <option value="all">הכל</option>
-                         <option value="halak">חלק (Halak)</option>
-                         <option value="muchshar">מוכשר (Muchshar)</option>
+                         {dynamicOptions.kosherFamilies.map(kf => <option key={kf} value={kf}>{kf}</option>)}
+                      </FilterDropdown>
+
+                      <FilterDropdown label="סוג כשרות" value={filters.kosherType} onChange={(val: string) => handleFilterChange('kosherType', val)}>
+                         <option value="all">הכל</option>
+                         {dynamicOptions.kosherTypes.map(kt => <option key={kt} value={kt}>{kt}</option>)}
                       </FilterDropdown>
 
                       <FilterDropdown label="מחלקה" value={filters.department} onChange={(val: string) => handleFilterChange('department', val)}>
                          <option value="all">הכל</option>
                          {dynamicOptions.departments.map(d => <option key={d} value={d}>{d}</option>)}
                       </FilterDropdown>
+                   </div>
 
-                      <FilterDropdown label="טריות" value={filters.freshness} onChange={(val: string) => handleFilterChange('freshness', val)}>
-                         <option value="all">הכל</option>
-                         <option value="Fresh">טרי (Fresh)</option>
-                         <option value="Frozen">קפוא (Frozen)</option>
-                      </FilterDropdown>
+                   {/* Row 2: remaining filters */}
+                   <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
 
                       <FilterDropdown label="X9" value={filters.isX9} onChange={(val: string) => handleFilterChange('isX9', val)}>
                          <option value="all">הכל</option>
@@ -417,9 +494,14 @@ export default function ProductionPage() {
                          <option value="false">לא</option>
                       </FilterDropdown>
 
+                      <FilterDropdown label="טריות" value={filters.freshness} onChange={(val: string) => handleFilterChange('freshness', val)}>
+                         <option value="all">הכל</option>
+                         {dynamicOptions.freshnessOpts.map(f => <option key={f} value={f}>{f === 'frozen' ? 'קפוא' : f === 'chilled' ? 'צונן' : f}</option>)}
+                      </FilterDropdown>
+
                       <FilterDropdown label="זן" value={filters.breed} onChange={(val: string) => handleFilterChange('breed', val)}>
                          <option value="all">הכל</option>
-                         {dynamicOptions.breeds.map(b => <option key={b} value={b}>{b}</option>)}
+                         {dynamicOptions.breedOpts.map(b => <option key={b} value={b}>{b === 'feed lot' ? 'פידלוט' : b === 'normal' ? 'רגיל' : b}</option>)}
                       </FilterDropdown>
 
                       <FilterDropdown label="לקוח" value={filters.customer} onChange={(val: string) => handleFilterChange('customer', val)}>
@@ -451,11 +533,10 @@ export default function ProductionPage() {
                             paginatedData.map((product) => (
                                <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                                   <td className="px-6 py-3 font-bold text-slate-800 text-xs md:text-sm">
-                                     {product.name}
-                                     <div className="flex gap-2 mt-1">
-                                        <span className={`text-[10px] px-1.5 py-0.5 rounded ${product.kosher.toLowerCase() === 'halak' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>{product.kosher}</span>
-                                        <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded">{product.freshness}</span>
-                                     </div>
+                                     <span className={`inline-block w-1 h-full mr-1 rounded-full`}></span>
+                                     <span className={product.kosher.toLowerCase() === 'halak' ? 'text-red-700' : 'text-emerald-800'}>
+                                       {product.name}
+                                     </span>
                                   </td>
                                   <td className="px-6 py-3 font-mono text-slate-600 tabular-nums font-medium">{product.weight.toLocaleString()}</td>
                                   <td className="px-6 py-3 font-mono text-slate-600 tabular-nums">{product.units.toLocaleString()}</td>
@@ -506,10 +587,17 @@ function StatCard({ icon: Icon, color, title, value, unit, avgValue, avgUnit, av
 
 function YieldCard({ title, inVal, outVal, variant, isX9 }: any) {
    const pct = inVal > 0 ? (outVal / inVal) * 100 : 0;
-   const styles: any = { neutral: { border: 'border-slate-200', bg: 'bg-white', text: 'text-slate-900' }, blue: { border: 'border-blue-200', bg: 'bg-blue-50/30', text: 'text-blue-800' }, orange: { border: 'border-orange-200', bg: 'bg-orange-50/30', text: 'text-orange-800' } };
-   const style = styles[variant];
+   const styles: any = {
+     neutral: { border: 'border-slate-200', bg: 'bg-white', text: 'text-slate-900' },
+     halak:   { border: 'border-red-200',   bg: 'bg-red-50/30', text: 'text-red-700' },
+     muchshar:{ border: 'border-emerald-200', bg: 'bg-emerald-50/30', text: 'text-emerald-800' },
+     // legacy aliases
+     blue:    { border: 'border-red-200',   bg: 'bg-red-50/30', text: 'text-red-700' },
+     orange:  { border: 'border-emerald-200', bg: 'bg-emerald-50/30', text: 'text-emerald-800' },
+   };
+   const style = styles[variant] || styles.neutral;
    return (
-      <div className={`p-3 rounded-lg border shadow-sm flex flex-col ${style.bg} ${isX9 ? 'border-dashed border-opacity-70' : 'border-solid'}`}>
+      <div className={`p-3 rounded-lg border shadow-sm flex flex-col ${style.bg} ${style.border} ${isX9 ? 'border-dashed' : 'border-solid'}`}>
          <h4 className="text-[10px] font-bold text-slate-500 mb-2 text-center uppercase tracking-wide">{title}</h4>
          <div className="flex items-center justify-between mb-2 px-1">
             <div className="text-center">

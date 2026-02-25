@@ -18,7 +18,7 @@ export const TrendChart = ({ data }: { data: any[] }) => {
             <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
           </linearGradient>
         </defs>
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
         <XAxis dataKey="date" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
         <YAxis stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} tickFormatter={(value) => `${value/1000}k`} />
         <Tooltip contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px', color: '#fff' }} />
@@ -66,22 +66,21 @@ export const FactoryBarChart = ({ data }: { data: any[] }) => {
         // כאן התיקון: הוספת שוליים בצד שמאל בשביל הטקסט
         margin={{ top: 5, right: 30, left: 40, bottom: 5 }}
       >
-        <CartesianGrid strokeDasharray="3 3" stroke="#334155" horizontal={true} vertical={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" horizontal={true} vertical={false} />
         <XAxis type="number" stroke="#94a3b8" fontSize={12} tickLine={false} axisLine={false} />
-        
-        {/* כאן התיקון: הגדרת רוחב קבוע לציר כדי שלא ידרס */}
-        <YAxis 
-          dataKey="name" 
-          type="category" 
-          stroke="#fff" 
-          width={100} 
-          fontSize={14} 
+
+        <YAxis
+          dataKey="name"
+          type="category"
+          stroke="#334155"
+          width={100}
+          fontSize={14}
           fontWeight="bold"
-          tickLine={false} 
+          tickLine={false}
           axisLine={false}
         />
         
-        <Tooltip cursor={{fill: '#334155', opacity: 0.4}} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
+        <Tooltip cursor={{fill: '#f1f5f9', opacity: 0.6}} contentStyle={{ backgroundColor: '#1e293b', border: 'none', borderRadius: '8px' }} />
         <Bar dataKey="production" fill="#10b981" radius={[0, 6, 6, 0]} barSize={35} />
       </BarChart>
     </ResponsiveContainer>

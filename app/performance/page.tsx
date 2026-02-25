@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useMemo } from 'react';
 import { getFactoryPerformance } from '@/app/actions/getFactoryPerformance';
+import { getSeasons, type Season } from '@/app/actions/settingsActions';
 import { 
   Calendar as CalendarIcon, 
   ChevronDown, 
@@ -47,8 +48,10 @@ const COLUMNS_CONFIG = [
 export default function PerformancePage() {
   // --- State ---
   const [loading, setLoading] = useState(true);
-  const [data, setData] = useState<FactoryData[]>([]); 
-  
+  const [data, setData] = useState<FactoryData[]>([]);
+  const [seasons, setSeasons] = useState<Season[]>([]);
+  const [isSeasonOpen, setIsSeasonOpen] = useState(false);
+
   // Dates
   const [startDate, setStartDate] = useState<Date>(new Date(new Date().setDate(new Date().getDate() - 30))); // חודש אחורה דיפולט
   const [endDate, setEndDate] = useState<Date>(new Date());
@@ -59,6 +62,11 @@ export default function PerformancePage() {
   const [selectedFactoryIds, setSelectedFactoryIds] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUMNS_CONFIG.map(c => c.key));
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total', direction: 'desc' });
+
+  // Load seasons once
+  useEffect(() => {
+    getSeasons().then(setSeasons);
+  }, []);
 
   // --- Fetch Data ---
   useEffect(() => {
@@ -74,7 +82,7 @@ export default function PerformancePage() {
 
         const res = await getFactoryPerformance(formatDateLocal(startDate), formatDateLocal(endDate));
         setData(res);
-        
+
         if (selectedFactoryIds.length === 0 && res.length > 0) {
             setSelectedFactoryIds(res.map((f: any) => f.id));
         }
@@ -139,13 +147,33 @@ export default function PerformancePage() {
     }
   };
   
+  // Select All / Deselect All for Factories
+  const allFactoryIds = data.map(f => f.id);
+  const handleSelectAllFactories = () => setSelectedFactoryIds(allFactoryIds);
+  const handleDeselectAllFactories = () => {
+    if (allFactoryIds.length > 0) setSelectedFactoryIds([allFactoryIds[0]]);
+  };
+
+  // Select All / Deselect All for Columns
+  const handleSelectAllColumns = () => setVisibleColumns(COLUMNS_CONFIG.map(c => c.key));
+  const handleDeselectAllColumns = () => {
+    // Keep at least 'total' visible
+    setVisibleColumns(['total']);
+  };
+
   // Quick Filters Handlers
-  const handleLastDay = () => {
-     // לוגיקה ליום אחרון (אפשר לשפר עם קריאה לשרת ליום האחרון האמיתי)
+  const handleToday = () => {
      const today = new Date();
      setStartDate(today);
      setEndDate(today);
-  }
+  };
+
+  const handleYesterday = () => {
+    const yesterday = new Date();
+    yesterday.setDate(yesterday.getDate() - 1);
+    setStartDate(yesterday);
+    setEndDate(yesterday);
+  };
 
   const handleCurrentWeek = () => {
     const today = new Date();
@@ -166,15 +194,20 @@ export default function PerformancePage() {
   const dateLabel = startDate && endDate ? `${startDate.toLocaleDateString('he-IL')} - ${endDate.toLocaleDateString('he-IL')}` : 'בחירת תאריכים';
 
   return (
-    <div className="space-y-8 pb-24 font-sans text-slate-800 bg-slate-50/50 min-h-screen" dir="rtl">
-      
+    <div className="space-y-8 pb-24 font-sans text-slate-800" dir="rtl">
+
       {/* Top Toolbar (Filters) */}
-      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 mx-4 mt-4 relative z-30">
+      <div className="bg-white p-4 rounded-2xl shadow-sm border border-slate-200 relative z-30">
         <div className="flex flex-col md:flex-row items-start md:items-center gap-6">
           
           {/* Factory Selector */}
           <div className="flex-1">
-            <label className="text-[11px] font-bold text-slate-400 mb-2 block uppercase tracking-wide">סינון מפעלים</label>
+            <div className="flex items-center gap-3 mb-2">
+              <label className="text-[11px] font-bold text-slate-400 uppercase tracking-wide">סינון מפעלים</label>
+              <button onClick={handleSelectAllFactories} className="text-[10px] font-bold text-blue-600 hover:underline">בחר הכל</button>
+              <span className="text-slate-300">|</span>
+              <button onClick={handleDeselectAllFactories} className="text-[10px] font-bold text-slate-400 hover:underline">בטל בחירה</button>
+            </div>
             <div className="flex flex-wrap gap-2">
               {data.map(factory => {
                 const isSelected = selectedFactoryIds.includes(factory.id);
@@ -183,8 +216,8 @@ export default function PerformancePage() {
                     key={factory.id}
                     onClick={() => toggleFactory(factory.id)}
                     className={`flex items-center gap-2 px-3 py-1.5 rounded-lg text-sm font-bold transition-all border ${
-                      isSelected 
-                        ? 'bg-slate-800 text-white border-slate-800 shadow-sm' 
+                      isSelected
+                        ? 'bg-slate-800 text-white border-slate-800 shadow-sm'
                         : 'bg-white text-slate-500 border-slate-200 hover:border-slate-300'
                     } ${isSelected && selectedFactoryIds.length === 1 ? 'opacity-80 cursor-not-allowed' : ''}`}
                   >
@@ -239,10 +272,40 @@ export default function PerformancePage() {
                 </div>
                 
                 {/* קיצורי דרך */}
-                <div className="flex gap-1">
-                    <button onClick={handleLastDay} className="px-3 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50">יום אחרון</button>
-                    <button onClick={handleCurrentWeek} className="px-3 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50">שבוע</button>
-                    <button onClick={handleCurrentMonth} className="px-3 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50">חודש</button>
+                <div className="flex gap-1 flex-wrap">
+                    <ShortcutBtn onClick={handleToday} label="היום" />
+                    <ShortcutBtn onClick={handleYesterday} label="אתמול" />
+                    <ShortcutBtn onClick={handleCurrentWeek} label="שבוע נוכחי" />
+                    <ShortcutBtn onClick={handleCurrentMonth} label="חודש נוכחי" />
+                    {seasons.length > 0 && (
+                      <div className="relative">
+                        <button
+                          onClick={() => setIsSeasonOpen(v => !v)}
+                          className="px-3 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 flex items-center gap-1"
+                        >
+                          עונה <ChevronDown size={12} />
+                        </button>
+                        {isSeasonOpen && (
+                          <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 shadow-xl rounded-xl z-50 min-w-[160px] py-1">
+                            {seasons.map(s => (
+                              <button
+                                key={s.id}
+                                onClick={() => {
+                                  setStartDate(new Date(s.start_date + 'T12:00:00'));
+                                  setEndDate(new Date(s.end_date + 'T12:00:00'));
+                                  setIsSeasonOpen(false);
+                                }}
+                                className="w-full text-right px-4 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between gap-2"
+                              >
+                                <span>{s.name}</span>
+                                {s.is_active && <span className="text-[10px] text-blue-600 font-bold">פעיל</span>}
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                        {isSeasonOpen && <div className="fixed inset-0 z-40" onClick={() => setIsSeasonOpen(false)} />}
+                      </div>
+                    )}
                 </div>
              </div>
           </div>
@@ -262,15 +325,18 @@ export default function PerformancePage() {
             <h3 className="text-xl font-bold text-slate-500">אין נתונים בטווח הנבחר</h3>
          </div>
       ) : (
-      <section className="px-4 animate-in fade-in slide-in-from-bottom-4 duration-500">
+      <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
         
         <SectionHeader title="דוח ביצועי שחיטה השוואתי" />
 
         {/* Column Manager */}
         <div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
-           <div className="flex items-center gap-2 text-slate-500">
+           <div className="flex items-center gap-2 text-slate-500 shrink-0">
               <Eye size={18} />
               <span className="text-xs font-bold uppercase">ניהול עמודות:</span>
+              <button onClick={handleSelectAllColumns} className="text-[10px] font-bold text-blue-600 hover:underline">הכל</button>
+              <span className="text-slate-300">|</span>
+              <button onClick={handleDeselectAllColumns} className="text-[10px] font-bold text-slate-400 hover:underline">נקה</button>
            </div>
            <div className="flex flex-wrap gap-2">
               {COLUMNS_CONFIG.map(col => {
@@ -280,8 +346,8 @@ export default function PerformancePage() {
                        key={col.key}
                        onClick={() => toggleColumnVisibility(col.key)}
                        className={`px-3 py-1.5 rounded-lg text-xs font-bold border transition-all ${
-                          isVisible 
-                             ? 'bg-blue-50 text-blue-700 border-blue-200 ring-1 ring-blue-200' 
+                          isVisible
+                             ? 'bg-blue-50 text-blue-700 border-blue-200 ring-1 ring-blue-200'
                              : 'bg-slate-50 text-slate-400 border-slate-200 hover:border-slate-300 decoration-dashed'
                        }`}
                     >
@@ -312,9 +378,9 @@ export default function PerformancePage() {
                         <span>{col.label}</span>
                         <div className="flex items-center gap-1">
                            <ArrowUpDown size={14} className={`opacity-0 group-hover:opacity-100 transition-opacity ${sortConfig.key === col.key ? 'opacity-100 text-blue-600' : ''}`} />
-                           <button 
+                           <button
                               onClick={(e) => { e.stopPropagation(); toggleColumnVisibility(col.key); }}
-                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-red-50 hover:text-red-500 rounded transition-all"
+                              className="opacity-0 group-hover:opacity-100 p-1 hover:bg-slate-100 hover:text-slate-600 rounded transition-all"
                               title="הסתר עמודה"
                            >
                               <X size={12} />
@@ -350,19 +416,31 @@ export default function PerformancePage() {
 
                     const isNegative = col.isNegative; // For red colors (waste)
 
+                    const colorClass = isNegative
+                      ? 'text-orange-600'
+                      : col.key === 'halak'
+                        ? 'text-red-700'
+                        : col.key === 'muchshar'
+                          ? 'text-emerald-800'
+                          : 'text-slate-700';
+
+                    const pctColorClass = isNegative
+                      ? 'text-orange-500 bg-orange-50'
+                      : col.key === 'halak'
+                        ? 'text-red-600 bg-red-50'
+                        : col.key === 'muchshar'
+                          ? 'text-emerald-700 bg-emerald-50'
+                          : 'text-slate-500 bg-slate-50';
+
                     return (
                       <td key={`${row.id}-${col.key}`} className="px-6 py-5">
                         <div className="flex flex-col">
-                           <span className={`text-lg font-mono font-bold tracking-tight ${
-                              isNegative ? 'text-red-600' : 
-                              col.key === 'halak' ? 'text-blue-700' : 
-                              col.key === 'muchshar' ? 'text-orange-600' : 'text-slate-700'
-                           }`}>
+                           <span className={`text-lg font-mono font-bold tracking-tight ${colorClass}`}>
                               {value.toLocaleString()}
                            </span>
-                           
+
                            {col.type !== 'simple' && (
-                              <span className="text-[11px] font-bold text-slate-400 mt-0.5 bg-slate-50 px-1.5 py-0.5 rounded w-fit">
+                              <span className={`text-sm font-black mt-0.5 px-2 py-0.5 rounded w-fit ${pctColorClass}`}>
                                  {percentage.toFixed(1)}%
                               </span>
                            )}
@@ -389,6 +467,17 @@ function SectionHeader({ title }: { title: string }) {
          <h2 className="text-2xl font-black text-slate-800 bg-white px-8 py-2 rounded-2xl shadow-sm border border-slate-100">{title}</h2>
       </div>
    );
+}
+
+function ShortcutBtn({ onClick, label }: { onClick: () => void; label: string }) {
+  return (
+    <button
+      onClick={onClick}
+      className="px-3 py-2 rounded-lg text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 whitespace-nowrap"
+    >
+      {label}
+    </button>
+  );
 }
 
 function generateCalendarDays(currentDate: Date) {

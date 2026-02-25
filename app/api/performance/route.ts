@@ -1,4 +1,4 @@
-export const dynamic = 'force-dynamic'; // <--- הוספנו את זה
+export const dynamic = 'force-dynamic';
 import { NextResponse } from 'next/server';
 import { query } from '@/lib/db';
 
@@ -8,58 +8,70 @@ export async function GET(request: Request) {
   const startDate = searchParams.get('startDate');
   const endDate = searchParams.get('endDate');
 
-  // אם לא נבחר מפעל, לא מחזירים כלום
-  if (!factoryId) {
-    return NextResponse.json({ error: 'Missing factoryId' }, { status: 400 });
+  if (!factoryId || !startDate || !endDate) {
+    return NextResponse.json({ error: 'Missing factoryId, startDate, or endDate' }, { status: 400 });
   }
 
   try {
-    // 1. נתונים כלליים (KPIs)
-    const kpiQuery = await query(`
-      SELECT 
-        SUM(pr.weight_kg) as total_weight,
-        SUM(pr.boxes) as total_boxes,
-        COUNT(DISTINCT w.work_id) as work_days,
-        ROUND((SUM(pr.weight_kg) / NULLIF((SELECT SUM(halak_kg_in + kosher_kg_in) 
-          FROM debone_batches db 
-          JOIN work_orders wo ON db.debone_id = wo.debone_id 
-          WHERE wo.factory_id = $1 AND db.date BETWEEN $2 AND $3), 0)) * 100, 1) as yield
+    // 1a. Output KPIs (from production_records JOIN work_orders)
+    const outputResult = await query(`
+      SELECT
+        COALESCE(SUM(pr.weight_kg), 0) as total_weight,
+        COALESCE(SUM(pr.boxes), 0) as total_boxes,
+        COUNT(DISTINCT wo.production_date) as work_days
       FROM production_records pr
-      JOIN work_orders w ON pr.work_id = w.work_id
-      JOIN slaughter_batches sb ON w.faena_id = sb.faena_id
-      WHERE w.factory_id = $1 AND sb.date BETWEEN $2 AND $3
+      JOIN work_orders wo ON pr.work_order_id = wo.id
+      WHERE wo.factory_id = $1
+        AND wo.production_date BETWEEN $2::date AND $3::date
     `, [factoryId, startDate, endDate]);
 
-    // 2. גרף ייצור יומי
-    const dailyQuery = await query(`
-      SELECT TO_CHAR(sb.date, 'DD/MM') as date, SUM(pr.weight_kg) as weight
-      FROM production_records pr
-      JOIN work_orders w ON pr.work_id = w.work_id
-      JOIN slaughter_batches sb ON w.faena_id = sb.faena_id
-      WHERE w.factory_id = $1 AND sb.date BETWEEN $2 AND $3
-      GROUP BY sb.date ORDER BY sb.date
+    // 1b. Input KPIs (from work_orders alone — avoids JOIN duplication)
+    const inputResult = await query(`
+      SELECT
+        COALESCE(SUM(halak_weight_in_kg + kosher_weight_in_kg), 0) as total_input_kg
+      FROM work_orders
+      WHERE factory_id = $1
+        AND production_date BETWEEN $2::date AND $3::date
     `, [factoryId, startDate, endDate]);
 
-    // 3. טופ 5 מוצרים
-    const topProductsQuery = await query(`
-      SELECT p.name_hebrew as name, SUM(pr.weight_kg) as weight
+    const kpi = { ...outputResult.rows[0], ...inputResult.rows[0] };
+    const totalInput = Number(kpi.total_input_kg) || 0;
+    const totalOutput = Number(kpi.total_weight) || 0;
+    const yieldPct = totalInput > 0 ? Math.round((totalOutput / totalInput) * 1000) / 10 : 0;
+
+    // 2. Daily production
+    const dailyResult = await query(`
+      SELECT TO_CHAR(wo.production_date, 'DD/MM') as date,
+             COALESCE(SUM(pr.weight_kg), 0) as weight
       FROM production_records pr
-      JOIN work_orders w ON pr.work_id = w.work_id
-      JOIN slaughter_batches sb ON w.faena_id = sb.faena_id
+      JOIN work_orders wo ON pr.work_order_id = wo.id
+      WHERE wo.factory_id = $1
+        AND wo.production_date BETWEEN $2::date AND $3::date
+      GROUP BY wo.production_date
+      ORDER BY wo.production_date
+    `, [factoryId, startDate, endDate]);
+
+    // 3. Top 5 products
+    const topResult = await query(`
+      SELECT COALESCE(p.name_hebrew, p.name_foreign) as name,
+             COALESCE(SUM(pr.weight_kg), 0) as weight
+      FROM production_records pr
+      JOIN work_orders wo ON pr.work_order_id = wo.id
       JOIN products p ON pr.item_id = p.item_id
-      WHERE w.factory_id = $1 AND sb.date BETWEEN $2 AND $3
-      GROUP BY p.name_hebrew
+      WHERE wo.factory_id = $1
+        AND wo.production_date BETWEEN $2::date AND $3::date
+      GROUP BY p.name_hebrew, p.name_foreign
       ORDER BY weight DESC LIMIT 5
     `, [factoryId, startDate, endDate]);
 
     return NextResponse.json({
-      kpi: kpiQuery.rows[0],
-      daily: dailyQuery.rows.map((r: any) => ({ ...r, weight: Number(r.weight) })),
-      products: topProductsQuery.rows.map((r: any) => ({ ...r, weight: Number(r.weight) }))
+      kpi: { ...kpi, yield: yieldPct },
+      daily: dailyResult.rows.map((r: any) => ({ ...r, weight: Number(r.weight) })),
+      products: topResult.rows.map((r: any) => ({ ...r, weight: Number(r.weight) })),
     });
 
   } catch (error) {
-    console.error(error);
+    console.error('Performance API error:', error);
     return NextResponse.json({ error: 'Internal Server Error' }, { status: 500 });
   }
 }
