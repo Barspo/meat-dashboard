@@ -50,7 +50,7 @@ export function Sidebar() {
         </div>
         
         <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 mr-3'}`}>
-          <h1 className="font-bold text-xl text-slate-800 whitespace-nowrap">MeatPro</h1>
+          <h1 className="font-bold text-xl text-slate-800 whitespace-nowrap">MeatPro!</h1>
         </div>
       </div>
 
