@@ -59,11 +59,13 @@ export async function uploadSlaughter(
       try {
         await query(`
           INSERT INTO slaughter_batches (
-            factory_id, date, cows_count, bulls_count,
+            factory_id, date, total_slaughtered,
+            cows_count, bulls_count,
             halak_count, muchshar_count,
             waste_lungs, waste_inner, waste_outer
-          ) VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, $9)
+          ) VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, $9, $10)
           ON CONFLICT (factory_id, date) DO UPDATE SET
+            total_slaughtered = EXCLUDED.total_slaughtered,
             cows_count = EXCLUDED.cows_count,
             bulls_count = EXCLUDED.bulls_count,
             halak_count = EXCLUDED.halak_count,
@@ -72,7 +74,8 @@ export async function uploadSlaughter(
             waste_inner = EXCLUDED.waste_inner,
             waste_outer = EXCLUDED.waste_outer
         `, [
-          factoryId, row.date, row.cows_count, row.bulls_count,
+          factoryId, row.date, row.cows_count + row.bulls_count,
+          row.cows_count, row.bulls_count,
           row.halak_count, row.muchshar_count,
           row.waste_lungs, row.waste_inner, row.waste_outer,
         ]);
@@ -86,8 +89,8 @@ export async function uploadSlaughter(
     // Update log
     const status = errors.length === 0 ? 'success' : (inserted > 0 ? 'partial' : 'error');
     await query(
-      `UPDATE import_logs SET status = $1, rows_imported = $2, error_details = $3 WHERE id = $4`,
-      [status, inserted, errors.length > 0 ? errors.join('\n') : null, logId]
+      `UPDATE import_logs SET status = $1, error_details = $2 WHERE id = $3`,
+      [status, errors.length > 0 ? errors.join('\n') : null, logId]
     );
 
     return { success: inserted > 0, rowsInserted: inserted, rowsSkipped: skipped, errors, warnings };

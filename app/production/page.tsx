@@ -15,11 +15,13 @@ import {
   AlertCircle,
   ArrowLeft,
   UtensilsCrossed,
-  ArrowUpDown, 
+  ArrowUpDown,
   Search,
   CheckSquare,
   Square,
-  ListFilter
+  ListFilter,
+  Maximize2,
+  X,
 } from 'lucide-react';
 
 // --- Types Definitions ---
@@ -33,7 +35,7 @@ interface Product {
   kosherFamily: string; // family label (e.g. 'חלק' / 'מוכשר')
   kosherType: string;   // specific type from kosher_families.name_hebrew
   department: string;
-  freshness: string;    // 'frozen' | 'chilled'
+  freshness: string;    // 'frozen' | 'fresh'
   breed: string;        // 'normal' | 'feed lot'
   customer: string;
   isX9: boolean;
@@ -52,6 +54,7 @@ interface SummaryData {
   days: number;
   totalWeight: number;
   totalUnits: number;
+  unitsMenakar: number;
   totalBoxes: number;
   quarters: { halak: number; muchshar: number; total: number };
 }
@@ -108,7 +111,8 @@ export default function ProductionPage() {
   const [hiddenProductIds, setHiddenProductIds] = useState<string[]>([]);
   const [productSearchTerm, setProductSearchTerm] = useState('');
   const [isProductDropdownOpen, setIsProductDropdownOpen] = useState(false);
-  const [sortConfig, setSortConfig] = useState<{ key: keyof Product, direction: 'asc' | 'desc' }>({ key: 'weight', direction: 'desc' });
+  const [sortConfig, setSortConfig] = useState<{ key: keyof Product | '_default', direction: 'asc' | 'desc' }>({ key: '_default', direction: 'asc' });
+  const [tableFullscreen, setTableFullscreen] = useState(false);
   
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -209,13 +213,25 @@ export default function ProductionPage() {
     });
   }, [data, filters]);
 
+  // Default sort: בשר → מנקר → rest; within dept: X9 first
+  function getDeptOrder(dept: string): number {
+    const d = dept.trim().toLowerCase();
+    if (d === 'בשר' || d === 'carne' || d === 'בשר עם עצם' || d === 'carne con hueso') return 0;
+    if (d === 'מנקר' || d === 'menudencias') return 1;
+    return 2;
+  }
+  function defaultSortKey(p: Product): string {
+    return `${getDeptOrder(p.department)}_${p.isX9 ? '0' : '1'}_${p.name}`;
+  }
+
   const filteredSortedData = useMemo(() => {
     let final = availableProducts.filter((p) => !hiddenProductIds.includes(p.id));
+    if (sortConfig.key === '_default') {
+      return [...final].sort((a, b) => defaultSortKey(a).localeCompare(defaultSortKey(b), 'he'));
+    }
     return [...final].sort((a, b) => {
-      // טיפול בערכים שיכולים להיות מחרוזת או מספר
-      const valA = a[sortConfig.key];
-      const valB = b[sortConfig.key];
-
+      const valA = a[sortConfig.key as keyof Product];
+      const valB = b[sortConfig.key as keyof Product];
       if (valA < valB) return sortConfig.direction === 'asc' ? -1 : 1;
       if (valA > valB) return sortConfig.direction === 'asc' ? 1 : -1;
       return 0;
@@ -230,6 +246,8 @@ export default function ProductionPage() {
   const handleFilterChange = (key: string, value: string) => { setFilters(prev => ({ ...prev, [key]: value })); setHiddenProductIds([]); };
   const toggleProductVisibility = (id: string) => { setHiddenProductIds(prev => prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]); };
   const handleSort = (key: keyof Product) => { setSortConfig(current => ({ key, direction: current.key === key && current.direction === 'desc' ? 'asc' : 'desc' })); };
+  const handleResetSort = () => setSortConfig({ key: '_default', direction: 'asc' });
+  const isDefaultSort = sortConfig.key === '_default';
 
   // --- Calc Vars ---
   const dateLabel = startDate && endDate ? `${startDate.toLocaleDateString('he-IL')} - ${endDate.toLocaleDateString('he-IL')}` : 'בחירת טווח תאריכים';
@@ -301,8 +319,8 @@ export default function ProductionPage() {
                     }}
                     className="w-full text-right px-4 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between gap-2"
                   >
-                    <span>{s.name}</span>
-                    {s.is_active && <span className="text-[10px] text-blue-600 font-bold">פעיל</span>}
+                    <span>{s.name_hebrew}</span>
+                    {s.is_current && <span className="text-[10px] text-blue-600 font-bold">נוכחית</span>}
                   </button>
                 ))}
               </div>
@@ -321,7 +339,7 @@ export default function ProductionPage() {
                 <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <StatCard icon={CalendarIcon} color="slate" title="ימי ייצור" value={data.summary.days} avgLabel="ימים בפועל" />
                     <StatCard icon={Scale} color="blue" title="משקל כולל" value={data.summary.totalWeight.toLocaleString()} unit='ק"ג' avgValue={(data.summary.totalWeight / workDays).toLocaleString(undefined, {maximumFractionDigits: 0})} avgUnit='ק"ג' />
-                    <StatCard icon={Box} color="orange" title='סה"כ יחידות' value={data.summary.totalUnits.toLocaleString()} avgValue={(data.summary.totalUnits / workDays).toLocaleString(undefined, {maximumFractionDigits: 0})} avgUnit="יח'" />
+                    <StatCard icon={Box} color="orange" title='יחידות מנקר' value={(data.summary.unitsMenakar ?? 0).toLocaleString()} avgValue={((data.summary.unitsMenakar ?? 0) / workDays).toLocaleString(undefined, {maximumFractionDigits: 0})} avgUnit="יח'" />
                     
                     <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex flex-col items-center text-center justify-between min-h-[140px] hover:shadow-md transition-shadow">
                         <div className="flex items-center gap-2 mb-1">
@@ -331,12 +349,12 @@ export default function ProductionPage() {
                         <div className="text-3xl font-black text-slate-900 my-1">{data.summary.quarters.total.toLocaleString()}</div>
                         <div className="w-full mt-1">
                             <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-100 mb-2">
-                                <div className="bg-red-500 h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%` }}></div>
-                                <div className="bg-emerald-700 h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%` }}></div>
+                                <div className="h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%`, backgroundColor: '#FF3300' }}></div>
+                                <div className="h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%`, backgroundColor: '#008000' }}></div>
                             </div>
                             <div className="flex justify-center gap-3 text-[10px] font-bold">
-                                <div className="flex items-center gap-1 text-red-700"><span className="w-1.5 h-1.5 rounded-full bg-red-500"></span>חלק: {data.summary.quarters.halak}</div>
-                                <div className="flex items-center gap-1 text-emerald-800"><span className="w-1.5 h-1.5 rounded-full bg-emerald-700"></span>מוכשר: {data.summary.quarters.muchshar}</div>
+                                <div className="flex items-center gap-1" style={{ color: '#FF3300' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#FF3300' }}></span>חלק: {data.summary.quarters.halak}</div>
+                                <div className="flex items-center gap-1" style={{ color: '#008000' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#008000' }}></span>מוכשר: {data.summary.quarters.muchshar}</div>
                             </div>
                         </div>
                     </div>
@@ -385,12 +403,12 @@ export default function ProductionPage() {
                         </div>
                         <div className="flex gap-4">
                            <div className="text-center px-4 border-l border-slate-100">
-                              <span className="block text-[10px] text-red-600 font-bold uppercase mb-1">חלק</span>
-                              <span className="text-xl font-bold text-red-700">{data.yields.steaks.unitsHalak}</span>
+                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#FF3300' }}>חלק</span>
+                              <span className="text-xl font-bold" style={{ color: '#FF3300' }}>{data.yields.steaks.unitsHalak}</span>
                            </div>
                            <div className="text-center px-4">
-                              <span className="block text-[10px] text-emerald-700 font-bold uppercase mb-1">מוכשר</span>
-                              <span className="text-xl font-bold text-emerald-800">{data.yields.steaks.unitsMuchshar}</span>
+                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#008000' }}>מוכשר</span>
+                              <span className="text-xl font-bold" style={{ color: '#008000' }}>{data.yields.steaks.unitsMuchshar}</span>
                            </div>
                         </div>
                      </div>
@@ -411,13 +429,26 @@ export default function ProductionPage() {
 
             {/* PART 4: Detailed Report */}
             <section>
-                <SectionHeader title="דוח ייצור מפורט" />
+                <div className="flex items-center gap-3 mb-4 mt-2">
+                  <h2 className="text-xl font-black text-slate-800">דוח ייצור מפורט</h2>
+                  {!isDefaultSort && (
+                    <button onClick={handleResetSort}
+                            className="flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 hover:bg-amber-100 transition-colors">
+                      איפוס תצוגה
+                    </button>
+                  )}
+                  <div className="flex-1" />
+                  <button onClick={() => setTableFullscreen(true)}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+                    <Maximize2 size={14} /> מסך מלא
+                  </button>
+                </div>
 
                 <div className="bg-white border border-slate-200 rounded-lg shadow-sm flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-slate-100 mb-6 overflow-hidden">
                     <TableSummaryItem label='סה"כ פריטים' value={filteredSortedData.length.toLocaleString()} unit="שורות" icon={ListFilter} color="text-slate-600" />
                     <TableSummaryItem label='סה"כ משקל' value={tableTotals.weight.toLocaleString()} unit='ק"ג' icon={Scale} color="text-blue-600" />
                     <TableSummaryItem label='סה"כ יחידות' value={tableTotals.units.toLocaleString()} unit="יח'" icon={UtensilsCrossed} color="text-purple-600" />
-                    <TableSummaryItem label='סה"כ קופסאות' value={tableTotals.boxes.toLocaleString()} unit="קרטונים" icon={Box} color="text-indigo-600" />
+                    <TableSummaryItem label='סה"כ קרטונים' value={tableTotals.boxes.toLocaleString()} unit="קרטונים" icon={Box} color="text-indigo-600" />
                 </div>
 
                 <div className="bg-white p-4 rounded-xl border border-slate-200 shadow-sm space-y-3 mb-4">
@@ -496,7 +527,7 @@ export default function ProductionPage() {
 
                       <FilterDropdown label="טריות" value={filters.freshness} onChange={(val: string) => handleFilterChange('freshness', val)}>
                          <option value="all">הכל</option>
-                         {dynamicOptions.freshnessOpts.map(f => <option key={f} value={f}>{f === 'frozen' ? 'קפוא' : f === 'chilled' ? 'צונן' : f}</option>)}
+                         {dynamicOptions.freshnessOpts.map(f => <option key={f} value={f}>{f === 'frozen' ? 'קפוא' : f === 'fresh' ? 'טרי' : f}</option>)}
                       </FilterDropdown>
 
                       <FilterDropdown label="זן" value={filters.breed} onChange={(val: string) => handleFilterChange('breed', val)}>
@@ -524,7 +555,7 @@ export default function ProductionPage() {
                                <div className="flex items-center gap-1">מס' יחידות<ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100"/></div>
                             </th>
                             <th className="px-6 py-4 cursor-pointer hover:bg-slate-100 group" onClick={() => handleSort('boxes')}>
-                               <div className="flex items-center gap-1">מס' קופסאות<ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100"/></div>
+                               <div className="flex items-center gap-1">מס' קרטונים<ArrowUpDown size={14} className="opacity-0 group-hover:opacity-100"/></div>
                             </th>
                          </tr>
                       </thead>
@@ -534,7 +565,7 @@ export default function ProductionPage() {
                                <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                                   <td className="px-6 py-3 font-bold text-slate-800 text-xs md:text-sm">
                                      <span className={`inline-block w-1 h-full mr-1 rounded-full`}></span>
-                                     <span className={product.kosher.toLowerCase() === 'halak' ? 'text-red-700' : 'text-emerald-800'}>
+                                     <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#FF3300' : '#008000' }}>
                                        {product.name}
                                      </span>
                                   </td>
@@ -562,6 +593,46 @@ export default function ProductionPage() {
 
          </div>
       )}
+
+      {/* ====== Table Fullscreen Modal ====== */}
+      {tableFullscreen && data && (
+        <div className="fixed inset-0 z-50 bg-white flex flex-col" dir="rtl">
+          <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
+            <span className="font-black text-slate-800">דוח ייצור מפורט — {filteredSortedData.length} שורות</span>
+            <button onClick={() => setTableFullscreen(false)}
+                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">
+              <X size={16} /> סגור
+            </button>
+          </div>
+          <div className="flex-1 overflow-auto">
+            <table className="w-full text-right text-sm">
+              <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium sticky top-0">
+                <tr>
+                  <th className="px-6 py-3 w-1/3">שם מוצר</th>
+                  <th className="px-6 py-3">משקל (ק"ג)</th>
+                  <th className="px-6 py-3">יחידות</th>
+                  <th className="px-6 py-3">קרטונים</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-slate-100">
+                {filteredSortedData.map(product => (
+                  <tr key={product.id} className="hover:bg-slate-50">
+                    <td className="px-6 py-2.5 font-bold text-sm">
+                      <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#FF3300' : '#008000' }}>
+                        {product.name}
+                      </span>
+                      {product.isX9 && <span className="mr-2 text-[10px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">X9</span>}
+                    </td>
+                    <td className="px-6 py-2.5 font-mono tabular-nums text-slate-600">{product.weight.toLocaleString()}</td>
+                    <td className="px-6 py-2.5 font-mono tabular-nums text-slate-600">{product.units.toLocaleString()}</td>
+                    <td className="px-6 py-2.5 font-mono tabular-nums text-slate-600">{product.boxes.toLocaleString()}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
@@ -588,16 +659,16 @@ function StatCard({ icon: Icon, color, title, value, unit, avgValue, avgUnit, av
 function YieldCard({ title, inVal, outVal, variant, isX9 }: any) {
    const pct = inVal > 0 ? (outVal / inVal) * 100 : 0;
    const styles: any = {
-     neutral: { border: 'border-slate-200', bg: 'bg-white', text: 'text-slate-900' },
-     halak:   { border: 'border-red-200',   bg: 'bg-red-50/30', text: 'text-red-700' },
-     muchshar:{ border: 'border-emerald-200', bg: 'bg-emerald-50/30', text: 'text-emerald-800' },
-     // legacy aliases
-     blue:    { border: 'border-red-200',   bg: 'bg-red-50/30', text: 'text-red-700' },
-     orange:  { border: 'border-emerald-200', bg: 'bg-emerald-50/30', text: 'text-emerald-800' },
+     neutral:  { borderColor: '#E2E8F0', backgroundColor: '#FFFFFF', color: '#0F172A' },
+     halak:    { borderColor: '#FF3300', backgroundColor: 'rgba(255,51,0,0.04)', color: '#FF3300' },
+     muchshar: { borderColor: '#008000', backgroundColor: 'rgba(0,128,0,0.04)', color: '#008000' },
+     blue:     { borderColor: '#FF3300', backgroundColor: 'rgba(255,51,0,0.04)', color: '#FF3300' },
+     orange:   { borderColor: '#008000', backgroundColor: 'rgba(0,128,0,0.04)', color: '#008000' },
    };
    const style = styles[variant] || styles.neutral;
    return (
-      <div className={`p-3 rounded-lg border shadow-sm flex flex-col ${style.bg} ${style.border} ${isX9 ? 'border-dashed' : 'border-solid'}`}>
+      <div className={`p-3 rounded-lg border shadow-sm flex flex-col ${isX9 ? 'border-dashed' : 'border-solid'}`}
+           style={{ borderColor: style.borderColor, backgroundColor: style.backgroundColor }}>
          <h4 className="text-[10px] font-bold text-slate-500 mb-2 text-center uppercase tracking-wide">{title}</h4>
          <div className="flex items-center justify-between mb-2 px-1">
             <div className="text-center">
@@ -611,7 +682,7 @@ function YieldCard({ title, inVal, outVal, variant, isX9 }: any) {
             </div>
          </div>
          <div className="mt-auto pt-1 border-t border-slate-200/50 text-center">
-            <span className={`text-lg font-black ${style.text}`}>{pct > 0 ? pct.toFixed(1) + '%' : '---'}</span>
+            <span className="text-lg font-black" style={{ color: style.color }}>{pct > 0 ? pct.toFixed(1) + '%' : '---'}</span>
          </div>
       </div>
    );

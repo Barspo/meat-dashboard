@@ -3,24 +3,27 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getFactoryPerformance } from '@/app/actions/getFactoryPerformance';
 import { getSeasons, type Season } from '@/app/actions/settingsActions';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronDown, 
-  ChevronLeft, 
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  ChevronLeft,
   ChevronRight,
-  ArrowUpDown, 
-  X, 
-  Eye, 
-  Factory, 
+  ArrowUpDown,
+  X,
+  Eye,
+  Factory,
   Check,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  Download,
 } from 'lucide-react';
+import { exportTableToExcel } from '@/lib/exportToExcel';
 
 // --- Types ---
 interface FactoryData {
   id: string;
   name: string;
+  countryNameHebrew: string | null;
   total: number;
   cows: number;
   bulls: number;
@@ -62,6 +65,7 @@ export default function PerformancePage() {
   const [selectedFactoryIds, setSelectedFactoryIds] = useState<string[]>([]);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(COLUMNS_CONFIG.map(c => c.key));
   const [sortConfig, setSortConfig] = useState<{ key: string, direction: 'asc' | 'desc' }>({ key: 'total', direction: 'desc' });
+  const [countryFilter, setCountryFilter] = useState<string>('');
 
   // Load seasons once
   useEffect(() => {
@@ -96,8 +100,13 @@ export default function PerformancePage() {
   }, [startDate, endDate]);
 
   // --- Logic ---
+  const uniqueCountries = useMemo(() =>
+    [...new Set(data.map(f => f.countryNameHebrew).filter(Boolean))].sort() as string[],
+  [data]);
+
   const filteredData = useMemo(() => {
     let filtered = data.filter(f => selectedFactoryIds.includes(f.id));
+    if (countryFilter) filtered = filtered.filter(f => f.countryNameHebrew === countryFilter);
 
     return filtered.sort((a: any, b: any) => {
       if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -230,6 +239,23 @@ export default function PerformancePage() {
             </div>
           </div>
 
+          {uniqueCountries.length > 1 && (
+            <>
+              <div className="hidden md:block w-px h-12 bg-slate-200"></div>
+              <div>
+                <label className="text-[11px] font-bold text-slate-400 mb-2 block uppercase tracking-wide">מדינה</label>
+                <select
+                  value={countryFilter}
+                  onChange={e => setCountryFilter(e.target.value)}
+                  className="px-3 py-2 border border-slate-200 rounded-xl text-sm bg-white font-bold text-slate-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">כל המדינות</option>
+                  {uniqueCountries.map(c => <option key={c} value={c}>{c}</option>)}
+                </select>
+              </div>
+            </>
+          )}
+
           <div className="hidden md:block w-px h-12 bg-slate-200"></div>
 
           {/* Date Picker */}
@@ -297,8 +323,8 @@ export default function PerformancePage() {
                                 }}
                                 className="w-full text-right px-4 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between gap-2"
                               >
-                                <span>{s.name}</span>
-                                {s.is_active && <span className="text-[10px] text-blue-600 font-bold">פעיל</span>}
+                                <span>{s.name_hebrew}</span>
+                                {s.is_current && <span className="text-[10px] text-blue-600 font-bold">נוכחי</span>}
                               </button>
                             ))}
                           </div>
@@ -326,8 +352,33 @@ export default function PerformancePage() {
          </div>
       ) : (
       <section className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-        
-        <SectionHeader title="דוח ביצועי שחיטה השוואתי" />
+
+        <div className="flex items-center justify-between mb-8 mt-4 relative">
+          <div className="absolute left-0 right-0 h-[3px] bg-slate-100 -z-10 rounded-full"></div>
+          <h2 className="text-2xl font-black text-slate-800 bg-white px-8 py-2 rounded-2xl shadow-sm border border-slate-100">
+            דוח ביצועי שחיטה השוואתי
+          </h2>
+          <button
+            onClick={() => {
+              const visibleCols = COLUMNS_CONFIG.filter(c => visibleColumns.includes(c.key));
+              exportTableToExcel(
+                [
+                  { key: 'name', header: 'מפעל' },
+                  ...visibleCols.map(c => ({ key: c.key, header: c.label })),
+                ],
+                filteredData.map(row => ({
+                  name: row.name,
+                  ...Object.fromEntries(visibleCols.map(c => [c.key, (row as any)[c.key]])),
+                })),
+                `ביצועי-שחיטה-${dateLabel}`
+              );
+            }}
+            className="flex items-center gap-2 px-4 py-2 bg-white border border-slate-200 text-slate-600 rounded-xl text-sm font-bold hover:bg-slate-50 shadow-sm transition-colors"
+          >
+            <Download size={16} />
+            ייצוא לאקסל
+          </button>
+        </div>
 
         {/* Column Manager */}
         <div className="mb-4 flex flex-col md:flex-row items-start md:items-center gap-4 bg-white p-3 rounded-xl border border-slate-200 shadow-sm">
@@ -398,8 +449,11 @@ export default function PerformancePage() {
                 <tr key={row.id} className="hover:bg-blue-50/30 transition-colors group">
                   
                   {/* Factory Name (Sticky) */}
-                  <td className="px-6 py-5 font-bold text-slate-800 sticky right-0 bg-white group-hover:bg-blue-50/30 border-l border-slate-100 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] transition-colors text-base">
-                    {row.name}
+                  <td className="px-6 py-5 sticky right-0 bg-white group-hover:bg-blue-50/30 border-l border-slate-100 shadow-[4px_0_12px_-4px_rgba(0,0,0,0.05)] transition-colors">
+                    <span className="font-bold text-slate-800 text-base">{row.name}</span>
+                    {row.countryNameHebrew && (
+                      <span className="block text-xs text-slate-400 font-medium mt-0.5">{row.countryNameHebrew}</span>
+                    )}
                   </td>
 
                   {/* Dynamic Cells */}
@@ -414,33 +468,33 @@ export default function PerformancePage() {
                        percentage = row.wasteTotal > 0 ? (value / row.wasteTotal) * 100 : 0;
                     }
 
-                    const isNegative = col.isNegative; // For red colors (waste)
+                    const isNegative = col.isNegative;
 
-                    const colorClass = isNegative
-                      ? 'text-orange-600'
-                      : col.key === 'halak'
-                        ? 'text-red-700'
-                        : col.key === 'muchshar'
-                          ? 'text-emerald-800'
-                          : 'text-slate-700';
+                    const valueColor = isNegative ? '#EA580C'
+                      : col.key === 'halak' ? '#FF3300'
+                      : col.key === 'muchshar' ? '#008000'
+                      : '#334155';
 
-                    const pctColorClass = isNegative
-                      ? 'text-orange-500 bg-orange-50'
-                      : col.key === 'halak'
-                        ? 'text-red-600 bg-red-50'
-                        : col.key === 'muchshar'
-                          ? 'text-emerald-700 bg-emerald-50'
-                          : 'text-slate-500 bg-slate-50';
+                    const pctColor = isNegative ? '#F97316'
+                      : col.key === 'halak' ? '#FF3300'
+                      : col.key === 'muchshar' ? '#008000'
+                      : '#64748B';
+
+                    const pctBg = isNegative ? '#FFF7ED'
+                      : col.key === 'halak' ? 'rgba(255,51,0,0.07)'
+                      : col.key === 'muchshar' ? 'rgba(0,128,0,0.07)'
+                      : '#F8FAFC';
 
                     return (
                       <td key={`${row.id}-${col.key}`} className="px-6 py-5">
                         <div className="flex flex-col">
-                           <span className={`text-lg font-mono font-bold tracking-tight ${colorClass}`}>
+                           <span className="text-lg font-mono font-bold tracking-tight" style={{ color: valueColor }}>
                               {value.toLocaleString()}
                            </span>
 
                            {col.type !== 'simple' && (
-                              <span className={`text-sm font-black mt-0.5 px-2 py-0.5 rounded w-fit ${pctColorClass}`}>
+                              <span className="text-sm font-black mt-0.5 px-2 py-0.5 rounded w-fit"
+                                    style={{ color: pctColor, backgroundColor: pctBg }}>
                                  {percentage.toFixed(1)}%
                               </span>
                            )}

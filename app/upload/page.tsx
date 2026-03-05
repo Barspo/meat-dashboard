@@ -8,7 +8,7 @@ import {
   type SlaughterPreviewResult, type SlaughterUploadResult,
 } from '@/app/actions/uploadSlaughterAction';
 import {
-  previewProduction, uploadProduction, getSeasons, getAvailableSlaughterBatches,
+  previewProduction, uploadProduction, getAvailableSlaughterBatches,
   type ProductionPreviewResult, type ProductionUploadResult, type SlaughterBatchOption,
 } from '@/app/actions/uploadProductionAction';
 import {
@@ -45,14 +45,12 @@ export default function UploadPage() {
   const [uploadType, setUploadType] = useState<UploadType | null>(null);
 
   // Details state
-  const [factories, setFactories] = useState<{ id: string; name: string }[]>([]);
-  const [seasons, setSeasonsList] = useState<{ id: number; name: string }[]>([]);
+  const [factories, setFactories] = useState<{ id: string; name: string; countryNameHebrew: string | null }[]>([]);
   const [factoryId, setFactoryId] = useState<string>('');
   const [productionDate, setProductionDate] = useState(() => {
     const d = new Date();
     return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
   });
-  const [seasonId, setSeasonId] = useState<string>('');
 
   // Link step state (production only)
   const [availableBatches, setAvailableBatches] = useState<SlaughterBatchOption[]>([]);
@@ -74,14 +72,9 @@ export default function UploadPage() {
   const [slaughterResult, setSlaughterResult] = useState<SlaughterUploadResult | null>(null);
   const [productionResult, setProductionResult] = useState<ProductionUploadResult | null>(null);
 
-  // Load factories + seasons on mount
+  // Load factories on mount
   useEffect(() => {
-    async function load() {
-      const [f, s] = await Promise.all([getFactories(), getSeasons()]);
-      setFactories(f);
-      setSeasonsList(s);
-    }
-    load();
+    getFactories().then(setFactories);
   }, []);
 
   const STEPS = uploadType === 'production' ? PRODUCTION_STEPS : SLAUGHTER_STEPS;
@@ -160,7 +153,7 @@ export default function UploadPage() {
         const result = await uploadProduction(
           Number(factoryId),
           productionDate,
-          selectedBatchId,
+          selectedBatchId!,
           base64,
           fileName
         );
@@ -183,7 +176,6 @@ export default function UploadPage() {
       const d = new Date();
       return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
     });
-    setSeasonId('');
     setAvailableBatches([]);
     setSelectedBatchId(null);
     setFileName('');
@@ -238,13 +230,10 @@ export default function UploadPage() {
           <StepDetails
             uploadType={uploadType!}
             factories={factories}
-            seasons={seasons}
             factoryId={factoryId}
             productionDate={productionDate}
-            seasonId={seasonId}
             onFactoryChange={setFactoryId}
             onDateChange={setProductionDate}
-            onSeasonChange={setSeasonId}
             onBack={() => { setStep('type'); setUploadType(null); }}
             onNext={handleDetailsNext}
             canAdvance={canAdvanceDetails}
@@ -359,18 +348,15 @@ function StepType({ onSelect }: { onSelect: (t: UploadType) => void }) {
 }
 
 function StepDetails({
-  uploadType, factories, seasons, factoryId, productionDate, seasonId,
-  onFactoryChange, onDateChange, onSeasonChange, onBack, onNext, canAdvance, loading,
+  uploadType, factories, factoryId, productionDate,
+  onFactoryChange, onDateChange, onBack, onNext, canAdvance, loading,
 }: {
   uploadType: UploadType;
-  factories: { id: string; name: string }[];
-  seasons: { id: number; name: string }[];
+  factories: { id: string; name: string; countryNameHebrew: string | null }[];
   factoryId: string;
   productionDate: string;
-  seasonId: string;
   onFactoryChange: (v: string) => void;
   onDateChange: (v: string) => void;
-  onSeasonChange: (v: string) => void;
   onBack: () => void;
   onNext: () => void;
   canAdvance: boolean;
@@ -395,7 +381,7 @@ function StepDetails({
               className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 pr-4 pl-10 text-sm font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
             >
               <option value="">בחר מפעל...</option>
-              {factories.map(f => <option key={f.id} value={f.id}>{f.name}</option>)}
+              {factories.map(f => <option key={f.id} value={f.id}>{f.name}{f.countryNameHebrew ? ` · ${f.countryNameHebrew}` : ''}</option>)}
             </select>
             <ChevronDown size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
           </div>
@@ -416,20 +402,6 @@ function StepDetails({
               />
             </div>
 
-            <div>
-              <label className="block text-xs font-bold text-slate-500 mb-1.5">עונה (אופציונלי)</label>
-              <div className="relative">
-                <select
-                  value={seasonId}
-                  onChange={e => onSeasonChange(e.target.value)}
-                  className="w-full appearance-none bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 pr-4 pl-10 text-sm text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
-                >
-                  <option value="">ללא</option>
-                  {seasons.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
-                </select>
-                <ChevronDown size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none" />
-              </div>
-            </div>
           </>
         )}
       </div>
@@ -523,7 +495,8 @@ function StepLink({
         </button>
         <button
           onClick={onNext}
-          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors"
+          disabled={batches.length > 0 && selectedBatchId === null}
+          className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
         >
           המשך <ArrowLeft size={16} />
         </button>
@@ -753,7 +726,7 @@ function StepPreview({
                   <tr>
                     <th className="px-3 py-2">ברקוד</th>
                     <th className="px-3 py-2">יחידות</th>
-                    <th className="px-3 py-2">קופסאות</th>
+                    <th className="px-3 py-2">קרטונים</th>
                     <th className="px-3 py-2">משקל (ק&quot;ג)</th>
                   </tr>
                 </thead>
@@ -851,8 +824,8 @@ function StepResult({
           {isSlaughter && slaughterResult && slaughterResult.rowsSkipped > 0 && ` | ${slaughterResult.rowsSkipped} שורות דולגו`}
         </p>
 
-        {!isSlaughter && productionResult?.workOrderId && (
-          <p className="text-xs mt-2 opacity-60">מספר הזמנת עבודה: {productionResult.workOrderId}</p>
+        {!isSlaughter && productionResult?.productionDataId && (
+          <p className="text-xs mt-2 opacity-60">מספר ייצור: {productionResult.productionDataId}</p>
         )}
 
         {!isSlaughter && productionResult && productionResult.unknownItemIds.length > 0 && (

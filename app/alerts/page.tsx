@@ -16,6 +16,10 @@ import {
   Package,
   Beef,
   Settings2,
+  Upload,
+  FileText,
+  ChevronDown,
+  ChevronUp,
 } from 'lucide-react';
 
 const severityConfig: Record<AlertSeverity, {
@@ -60,13 +64,16 @@ const categoryConfig: Record<AlertCategory, { icon: React.ElementType; label: st
   production: { icon: Package, label: 'ייצור', color: 'text-blue-500' },
   slaughter: { icon: Beef, label: 'שחיטה', color: 'text-amber-600' },
   system: { icon: Settings2, label: 'מערכת', color: 'text-slate-500' },
+  upload: { icon: Upload, label: 'העלאות', color: 'text-violet-500' },
 };
+
+type FilterType = AlertSeverity | 'all' | 'upload';
 
 export default function AlertsPage() {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [loading, setLoading] = useState(true);
   const [dismissed, setDismissed] = useState<Set<string>>(new Set());
-  const [activeFilter, setActiveFilter] = useState<AlertSeverity | 'all'>('all');
+  const [activeFilter, setActiveFilter] = useState<FilterType>('all');
 
   async function load() {
     setLoading(true);
@@ -80,16 +87,21 @@ export default function AlertsPage() {
 
   useEffect(() => { load(); }, []);
 
-  const visibleAlerts = alerts.filter(a =>
-    !dismissed.has(a.id) &&
-    (activeFilter === 'all' || a.severity === activeFilter)
-  );
+  const uploadAlerts = alerts.filter(a => !dismissed.has(a.id) && a.category === 'upload');
+  const nonUploadAlerts = alerts.filter(a => !dismissed.has(a.id) && a.category !== 'upload');
+
+  const visibleAlerts = activeFilter === 'upload'
+    ? uploadAlerts
+    : nonUploadAlerts.filter(a =>
+        activeFilter === 'all' || a.severity === activeFilter
+      );
 
   const counts = {
-    all: alerts.filter(a => !dismissed.has(a.id)).length,
-    error: alerts.filter(a => !dismissed.has(a.id) && a.severity === 'error').length,
-    warning: alerts.filter(a => !dismissed.has(a.id) && a.severity === 'warning').length,
-    info: alerts.filter(a => !dismissed.has(a.id) && a.severity === 'info').length,
+    all: nonUploadAlerts.length,
+    error: nonUploadAlerts.filter(a => a.severity === 'error').length,
+    warning: nonUploadAlerts.filter(a => a.severity === 'warning').length,
+    info: nonUploadAlerts.filter(a => a.severity === 'info').length,
+    upload: uploadAlerts.length,
   };
 
   const dismissAlert = (id: string) => setDismissed(prev => new Set([...prev, id]));
@@ -115,7 +127,7 @@ export default function AlertsPage() {
       </div>
 
       {/* Summary cards */}
-      <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+      <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
         <SummaryCard
           label="סה״כ התראות"
           count={counts.all}
@@ -148,6 +160,14 @@ export default function AlertsPage() {
           active={activeFilter === 'info'}
           onClick={() => setActiveFilter('info')}
         />
+        <SummaryCard
+          label="העלאות"
+          count={counts.upload}
+          icon={Upload}
+          colorClass="text-violet-600 bg-violet-50"
+          active={activeFilter === 'upload'}
+          onClick={() => setActiveFilter('upload')}
+        />
       </div>
 
       {/* Alert list */}
@@ -156,7 +176,7 @@ export default function AlertsPage() {
         {visibleAlerts.length > 0 && (
           <div className="flex items-center justify-between mb-2">
             <span className="text-sm font-bold text-slate-500">
-              מציג {visibleAlerts.length} התראות
+              מציג {visibleAlerts.length} {activeFilter === 'upload' ? 'רשומות' : 'התראות'}
             </span>
             <button
               onClick={dismissAll}
@@ -178,7 +198,7 @@ export default function AlertsPage() {
               <CheckCircle2 size={48} className="text-blue-500" />
             </div>
             <h3 className="text-xl font-black text-slate-700 mb-1">
-              {activeFilter === 'all' ? 'אין התראות פעילות' : 'אין התראות בקטגוריה זו'}
+              {activeFilter === 'all' ? 'אין התראות פעילות' : 'אין פריטים בקטגוריה זו'}
             </h3>
             <p className="text-slate-400 text-sm">
               {activeFilter === 'all'
@@ -187,13 +207,11 @@ export default function AlertsPage() {
             </p>
           </div>
         ) : (
-          visibleAlerts.map(alert => (
-            <AlertCard
-              key={alert.id}
-              alert={alert}
-              onDismiss={() => dismissAlert(alert.id)}
-            />
-          ))
+          visibleAlerts.map(alert =>
+            alert.category === 'upload'
+              ? <UploadAlertCard key={alert.id} alert={alert} onDismiss={() => dismissAlert(alert.id)} />
+              : <AlertCard key={alert.id} alert={alert} onDismiss={() => dismissAlert(alert.id)} />
+          )
         )}
       </div>
 
@@ -286,6 +304,100 @@ function AlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => void }
       >
         <Trash2 size={15} />
       </button>
+    </div>
+  );
+}
+
+const uploadStatusConfig: Record<string, { label: string; bg: string; text: string }> = {
+  success: { label: 'הצליח', bg: 'bg-emerald-100', text: 'text-emerald-700' },
+  error:   { label: 'שגיאה', bg: 'bg-red-100',     text: 'text-red-700' },
+  partial: { label: 'חלקי',  bg: 'bg-amber-100',   text: 'text-amber-700' },
+};
+
+const uploadMethodConfig: Record<string, { label: string; bg: string; text: string }> = {
+  manual: { label: 'ידני',     bg: 'bg-slate-100',   text: 'text-slate-600' },
+  auto:   { label: 'אוטומטי', bg: 'bg-violet-100',  text: 'text-violet-700' },
+  api:    { label: 'API',      bg: 'bg-indigo-100',  text: 'text-indigo-700' },
+};
+
+function UploadAlertCard({ alert, onDismiss }: { alert: Alert; onDismiss: () => void }) {
+  const [expanded, setExpanded] = useState(false);
+
+  const statusCfg = uploadStatusConfig[alert.status || ''] ?? { label: alert.status || '—', bg: 'bg-slate-100', text: 'text-slate-600' };
+  const methodCfg = uploadMethodConfig[alert.uploadMethod || ''] ?? { label: alert.uploadMethod || '—', bg: 'bg-slate-100', text: 'text-slate-600' };
+  const typeLabel = alert.uploadType === 'slaughter' ? 'שחיטה' : alert.uploadType === 'production' ? 'ייצור' : alert.uploadType || '—';
+
+  const borderColor = alert.status === 'error' ? 'border-red-200' : alert.status === 'partial' ? 'border-amber-200' : 'border-slate-200';
+  const bgColor = alert.status === 'error' ? 'bg-red-50' : alert.status === 'partial' ? 'bg-amber-50' : 'bg-white';
+
+  return (
+    <div className={`rounded-xl border ${bgColor} ${borderColor} group overflow-hidden`}>
+      {/* Main row */}
+      <div className="flex items-center gap-3 p-4">
+        {/* File icon */}
+        <div className="flex-shrink-0 w-9 h-9 rounded-lg bg-violet-100 flex items-center justify-center">
+          <FileText size={18} className="text-violet-600" />
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          {/* Top: filename + badges */}
+          <div className="flex items-center gap-2 flex-wrap mb-1">
+            <span className="font-bold text-slate-800 text-sm truncate max-w-[200px]" title={alert.fileName}>
+              {alert.fileName || '—'}
+            </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${statusCfg.bg} ${statusCfg.text}`}>
+              {statusCfg.label}
+            </span>
+            <span className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${methodCfg.bg} ${methodCfg.text}`}>
+              {methodCfg.label}
+            </span>
+            <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-500">
+              {typeLabel}
+            </span>
+          </div>
+          {/* Bottom: factory + rows + date */}
+          <div className="flex items-center gap-4 text-[11px] text-slate-400">
+            {alert.factoryName && alert.factoryName !== '-' && (
+              <span className="flex items-center gap-1 font-medium">
+                <Factory size={11} />
+                {alert.factoryName}
+              </span>
+            )}
+            <span>{alert.date}</span>
+          </div>
+        </div>
+
+        {/* Right actions */}
+        <div className="flex items-center gap-1 flex-shrink-0">
+          {alert.errorDetails && (
+            <button
+              onClick={() => setExpanded(v => !v)}
+              className="flex items-center gap-1 text-[11px] font-bold text-red-500 hover:text-red-700 px-2 py-1 rounded-lg hover:bg-red-50 transition-colors"
+            >
+              {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+              פרטי שגיאה
+            </button>
+          )}
+          <button
+            onClick={onDismiss}
+            className="p-1.5 rounded-lg opacity-0 group-hover:opacity-100 hover:bg-white/60 text-slate-400 hover:text-slate-600 transition-all"
+            title="סגור"
+          >
+            <Trash2 size={15} />
+          </button>
+        </div>
+      </div>
+
+      {/* Expanded error details */}
+      {expanded && alert.errorDetails && (
+        <div className="border-t border-red-200 bg-red-50 px-4 py-3">
+          <p className="text-xs font-bold text-red-600 mb-1">פרטי שגיאה:</p>
+          <pre className="text-[11px] text-red-700 whitespace-pre-wrap break-words font-mono leading-relaxed">
+            {alert.errorDetails}
+          </pre>
+        </div>
+      )}
     </div>
   );
 }
