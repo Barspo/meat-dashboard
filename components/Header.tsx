@@ -7,7 +7,7 @@ export function Header() {
       
       {/* שם המסך הנוכחי */}
       <div>
-        <h2 className="text-lg font-semibold text-slate-800">לוח בקרה</h2>
+        <h2 className="text-lg font-semibold text-slate-800">לוח בקרה <span className="text-sm font-medium text-amber-600 bg-amber-50 border border-amber-200 rounded px-2 py-0.5">סביבת staging</span></h2>
       </div>
 
       {/* צד שמאל - פרופיל והתראות */}
