@@ -1,26 +1,28 @@
 'use client';
 
-import { 
-  LayoutDashboard, 
-  Factory, 
-  Database, 
-  Bell, 
-  Settings, 
-  FileUp, 
-  LogOut, 
-  ChevronLeft, 
-  ChevronRight 
+import {
+  LayoutDashboard,
+  Factory,
+  Database,
+  Bell,
+  Settings,
+  FileUp,
+  FolderOpen,
+  LogOut,
+  ChevronLeft,
+  ChevronRight
 } from 'lucide-react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useSidebar } from './SidebarContext'; // וודא שגם הקובץ הזה קיים ומלא!
 
 const menuItems = [
-  { name: 'לוח בקרה ראשי', icon: LayoutDashboard, href: '/' },
+  { name: 'דף בית', icon: LayoutDashboard, href: '/' },
   { name: 'ביצועי מפעלים', icon: Factory, href: '/performance' },
   { name: 'נתוני ייצור', icon: Database, href: '/production' },
   { name: 'מרכז התראות', icon: Bell, href: '/alerts' },
   { name: 'העלאת קבצים', icon: FileUp, href: '/upload' },
+  { name: 'ניהול קבצים', icon: FolderOpen, href: '/files' },
   { name: 'הגדרות מערכת', icon: Settings, href: '/settings' },
 ];
 
@@ -50,7 +52,7 @@ export function Sidebar() {
         </div>
         
         <div className={`overflow-hidden transition-all duration-300 ${isCollapsed ? 'w-0 opacity-0' : 'w-auto opacity-100 mr-3'}`}>
-          <h1 className="font-bold text-xl text-slate-800 whitespace-nowrap">MeatPro</h1>
+          <h1 className="font-bold text-base text-slate-800 whitespace-nowrap tracking-wide">ORCAD FOODS</h1>
         </div>
       </div>
 

@@ -1,7 +1,6 @@
 'use server';
 
 import { query } from '@/lib/db';
-import { getAlerts } from './getAlerts';
 
 export interface HomeData {
   activeFactories: number;
@@ -15,13 +14,11 @@ export interface HomeData {
     status: string;
     rowsImported: number;
   }[];
-  alertCounts: { error: number; warning: number; info: number };
 }
 
 export async function getHomeData(): Promise<HomeData> {
   try {
-    const [alertsList, factoriesRes, slaughterRes, productionRes, uploadsRes] = await Promise.all([
-      getAlerts().catch(() => []),
+    const [factoriesRes, slaughterRes, productionRes, uploadsRes] = await Promise.all([
       query(`SELECT COUNT(*) as cnt FROM factories WHERE active = true`),
       query(`
         SELECT sb.date::text, SUM(sb.cows_count + sb.bulls_count) as total_heads,
@@ -55,11 +52,6 @@ export async function getHomeData(): Promise<HomeData> {
       `),
     ]);
 
-    const alertCounts = alertsList.reduce(
-      (acc, a) => { acc[a.severity] = (acc[a.severity] || 0) + 1; return acc; },
-      { error: 0, warning: 0, info: 0 } as Record<string, number>
-    );
-
     return {
       activeFactories: Number(factoriesRes.rows[0]?.cnt) || 0,
       recentSlaughterDays: slaughterRes.rows.map((r: any) => ({
@@ -80,11 +72,6 @@ export async function getHomeData(): Promise<HomeData> {
         status: r.status,
         rowsImported: Number(r.rows_imported) || 0,
       })),
-      alertCounts: {
-        error: alertCounts.error || 0,
-        warning: alertCounts.warning || 0,
-        info: alertCounts.info || 0,
-      },
     };
   } catch (error) {
     console.error('Error fetching home data:', error);
@@ -93,7 +80,6 @@ export async function getHomeData(): Promise<HomeData> {
       recentSlaughterDays: [],
       recentProductionDays: [],
       recentUploads: [],
-      alertCounts: { error: 0, warning: 0, info: 0 },
     };
   }
 }

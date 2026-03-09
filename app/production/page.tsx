@@ -3,14 +3,14 @@
 import { useState, useEffect, useMemo } from 'react';
 import { getProductionData, getFactories, getLastProductionDate } from '@/app/actions/getProductionData';
 import { getSeasons, type Season } from '@/app/actions/settingsActions';
-import { 
-  Calendar as CalendarIcon, 
-  ChevronDown, 
-  ChevronLeft, 
-  ChevronRight, 
-  Scale, 
-  Box, 
-  Beef, 
+import {
+  Calendar as CalendarIcon,
+  ChevronDown,
+  ChevronLeft,
+  ChevronRight,
+  Scale,
+  Box,
+  Beef,
   Loader2,
   AlertCircle,
   ArrowLeft,
@@ -22,7 +22,9 @@ import {
   ListFilter,
   Maximize2,
   X,
+  Download,
 } from 'lucide-react';
+import { exportTableToExcel } from '@/lib/exportToExcel';
 
 // --- Types Definitions ---
 interface Product {
@@ -85,6 +87,7 @@ export default function ProductionPage() {
   const [selectedFactory, setSelectedFactory] = useState('0');
   const [seasons, setSeasons] = useState<Season[]>([]);
   const [isSeasonOpen, setIsSeasonOpen] = useState(false);
+  const [selectedSeasonName, setSelectedSeasonName] = useState<string | null>(null);
   
   const [startDate, setStartDate] = useState<Date | null>(null);
   const [endDate, setEndDate] = useState<Date | null>(null);
@@ -249,6 +252,26 @@ export default function ProductionPage() {
   const handleResetSort = () => setSortConfig({ key: '_default', direction: 'asc' });
   const isDefaultSort = sortConfig.key === '_default';
 
+  // --- Export ---
+  const handleExport = () => {
+    exportTableToExcel(
+      [
+        { header: 'שם מוצר', key: 'name', width: 30 },
+        { header: 'משקל (ק"ג)', key: 'weight', width: 15 },
+        { header: 'יחידות', key: 'units', width: 12 },
+        { header: 'קרטונים', key: 'boxes', width: 12 },
+        { header: 'מחלקה', key: 'department', width: 15 },
+        { header: 'כשרות', key: 'kosherFamily', width: 12 },
+        { header: 'סוג כשרות', key: 'kosherType', width: 15 },
+        { header: 'טריות', key: 'freshness', width: 10 },
+        { header: 'זן', key: 'breed', width: 10 },
+        { header: 'לקוח', key: 'customer', width: 15 },
+      ],
+      filteredSortedData as unknown as Record<string, unknown>[],
+      `production-report-${new Date().toISOString().slice(0, 10)}`
+    );
+  };
+
   // --- Calc Vars ---
   const dateLabel = startDate && endDate ? `${startDate.toLocaleDateString('he-IL')} - ${endDate.toLocaleDateString('he-IL')}` : 'בחירת טווח תאריכים';
   const workDays = data?.summary?.days || 1;
@@ -303,9 +326,13 @@ export default function ProductionPage() {
           <div className="relative">
             <button
               onClick={() => setIsSeasonOpen(v => !v)}
-              className="px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap bg-white border border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:shadow-md transition-all flex items-center gap-1"
+              className={`px-3 py-2 rounded-lg text-xs font-bold whitespace-nowrap border transition-all flex items-center gap-1 ${
+                selectedSeasonName
+                  ? 'bg-blue-50 border-blue-300 text-blue-700'
+                  : 'bg-white border-slate-200 text-slate-600 hover:bg-slate-900 hover:text-white hover:shadow-md'
+              }`}
             >
-              עונה <ChevronDown size={12} />
+              {selectedSeasonName ?? 'עונה'} <ChevronDown size={12} />
             </button>
             {isSeasonOpen && (
               <div className="absolute top-full right-0 mt-2 bg-white border border-slate-200 shadow-xl rounded-xl z-50 min-w-[160px] py-1">
@@ -315,6 +342,7 @@ export default function ProductionPage() {
                     onClick={() => {
                       setStartDate(new Date(s.start_date + 'T12:00:00'));
                       setEndDate(new Date(s.end_date + 'T12:00:00'));
+                      setSelectedSeasonName(s.name_hebrew);
                       setIsSeasonOpen(false);
                     }}
                     className="w-full text-right px-4 py-2 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 transition-colors flex items-center justify-between gap-2"
@@ -349,12 +377,12 @@ export default function ProductionPage() {
                         <div className="text-3xl font-black text-slate-900 my-1">{data.summary.quarters.total.toLocaleString()}</div>
                         <div className="w-full mt-1">
                             <div className="flex h-2 w-full rounded-full overflow-hidden bg-slate-100 mb-2">
-                                <div className="h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%`, backgroundColor: '#FF3300' }}></div>
-                                <div className="h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%`, backgroundColor: '#008000' }}></div>
+                                <div className="h-full" style={{ width: `${(data.summary.quarters.halak / data.summary.quarters.total) * 100}%`, backgroundColor: '#cc2200' }}></div>
+                                <div className="h-full" style={{ width: `${(data.summary.quarters.muchshar / data.summary.quarters.total) * 100}%`, backgroundColor: '#15803d' }}></div>
                             </div>
                             <div className="flex justify-center gap-3 text-[10px] font-bold">
-                                <div className="flex items-center gap-1" style={{ color: '#FF3300' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#FF3300' }}></span>חלק: {data.summary.quarters.halak}</div>
-                                <div className="flex items-center gap-1" style={{ color: '#008000' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#008000' }}></span>מוכשר: {data.summary.quarters.muchshar}</div>
+                                <div className="flex items-center gap-1" style={{ color: '#cc2200' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#cc2200' }}></span>חלק: {data.summary.quarters.halak}</div>
+                                <div className="flex items-center gap-1" style={{ color: '#15803d' }}><span className="w-1.5 h-1.5 rounded-full" style={{ backgroundColor: '#15803d' }}></span>מוכשר: {data.summary.quarters.muchshar}</div>
                             </div>
                         </div>
                     </div>
@@ -403,12 +431,12 @@ export default function ProductionPage() {
                         </div>
                         <div className="flex gap-4">
                            <div className="text-center px-4 border-l border-slate-100">
-                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#FF3300' }}>חלק</span>
-                              <span className="text-xl font-bold" style={{ color: '#FF3300' }}>{data.yields.steaks.unitsHalak}</span>
+                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#cc2200' }}>חלק</span>
+                              <span className="text-xl font-bold" style={{ color: '#cc2200' }}>{data.yields.steaks.unitsHalak}</span>
                            </div>
                            <div className="text-center px-4">
-                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#008000' }}>מוכשר</span>
-                              <span className="text-xl font-bold" style={{ color: '#008000' }}>{data.yields.steaks.unitsMuchshar}</span>
+                              <span className="block text-[10px] font-bold uppercase mb-1" style={{ color: '#15803d' }}>מוכשר</span>
+                              <span className="text-xl font-bold" style={{ color: '#15803d' }}>{data.yields.steaks.unitsMuchshar}</span>
                            </div>
                         </div>
                      </div>
@@ -438,6 +466,10 @@ export default function ProductionPage() {
                     </button>
                   )}
                   <div className="flex-1" />
+                  <button onClick={handleExport}
+                          className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                    <Download size={14} /> ייצוא אקסל
+                  </button>
                   <button onClick={() => setTableFullscreen(true)}
                           className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
                     <Maximize2 size={14} /> מסך מלא
@@ -565,7 +597,7 @@ export default function ProductionPage() {
                                <tr key={product.id} className="hover:bg-slate-50 transition-colors">
                                   <td className="px-6 py-3 font-bold text-slate-800 text-xs md:text-sm">
                                      <span className={`inline-block w-1 h-full mr-1 rounded-full`}></span>
-                                     <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#FF3300' : '#008000' }}>
+                                     <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#cc2200' : '#15803d' }}>
                                        {product.name}
                                      </span>
                                   </td>
@@ -597,13 +629,107 @@ export default function ProductionPage() {
       {/* ====== Table Fullscreen Modal ====== */}
       {tableFullscreen && data && (
         <div className="fixed inset-0 z-50 bg-white flex flex-col" dir="rtl">
+          {/* Header */}
           <div className="flex items-center justify-between px-6 py-3 border-b border-slate-200 bg-slate-50 shrink-0">
             <span className="font-black text-slate-800">דוח ייצור מפורט — {filteredSortedData.length} שורות</span>
-            <button onClick={() => setTableFullscreen(false)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">
-              <X size={16} /> סגור
-            </button>
+            <div className="flex items-center gap-2">
+              <button onClick={handleExport}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-green-50 text-green-700 border border-green-200 hover:bg-green-100 transition-colors">
+                <Download size={14} /> ייצוא אקסל
+              </button>
+              <button onClick={() => setTableFullscreen(false)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-sm font-bold bg-slate-200 text-slate-700 hover:bg-slate-300">
+                <X size={16} /> סגור
+              </button>
+            </div>
           </div>
+
+          {/* Summary */}
+          <div className="shrink-0 bg-white border-b border-slate-200 flex flex-col md:flex-row divide-y md:divide-y-0 md:divide-x md:divide-x-reverse divide-slate-100 overflow-hidden">
+            <TableSummaryItem label='סה"כ פריטים' value={filteredSortedData.length.toLocaleString()} unit="שורות" icon={ListFilter} color="text-slate-600" />
+            <TableSummaryItem label='סה"כ משקל' value={tableTotals.weight.toLocaleString()} unit='ק"ג' icon={Scale} color="text-blue-600" />
+            <TableSummaryItem label='סה"כ יחידות' value={tableTotals.units.toLocaleString()} unit="יח'" icon={UtensilsCrossed} color="text-purple-600" />
+            <TableSummaryItem label='סה"כ קרטונים' value={tableTotals.boxes.toLocaleString()} unit="קרטונים" icon={Box} color="text-indigo-600" />
+          </div>
+
+          {/* Filters */}
+          <div className="shrink-0 bg-slate-50 border-b border-slate-200 p-4 space-y-3">
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              {/* Product picker */}
+              <div className="relative col-span-2 md:col-span-1">
+                <label className="text-[10px] font-bold text-slate-400 mb-1 block uppercase">שם מוצר</label>
+                <button onClick={() => setIsProductDropdownOpen(!isProductDropdownOpen)} className="w-full flex items-center justify-between bg-white border border-slate-200 rounded-lg py-1.5 px-3 hover:bg-slate-100 h-[36px]">
+                  <span className="truncate text-xs font-bold text-slate-700">
+                    {hiddenProductIds.length === 0 ? 'הכל מוצג' : `${availableProducts.length - hiddenProductIds.length} / ${availableProducts.length}`}
+                  </span>
+                  <ChevronDown size={14} className="text-slate-400 shrink-0" />
+                </button>
+                {isProductDropdownOpen && (
+                  <div className="absolute top-full right-0 mt-2 w-72 bg-white rounded-xl shadow-xl border border-slate-200 z-[60] p-2">
+                    <div className="relative mb-2">
+                      <Search size={14} className="absolute right-2 top-1/2 -translate-y-1/2 text-slate-400" />
+                      <input type="text" className="w-full bg-slate-50 border border-slate-100 rounded-lg text-xs py-2 pr-8 pl-2 outline-none" placeholder="הקלד שם..." value={productSearchTerm} onChange={(e) => setProductSearchTerm(e.target.value)} />
+                    </div>
+                    <div className="flex items-center gap-2 mb-2 px-1">
+                      <button onClick={() => setHiddenProductIds([])} className="text-[10px] font-bold text-blue-600 hover:underline">בחר הכל</button>
+                      <span className="text-slate-300">|</span>
+                      <button onClick={() => setHiddenProductIds(availableProducts.map(p => p.id))} className="text-[10px] font-bold text-slate-400 hover:underline">בטל בחירה</button>
+                    </div>
+                    <div className="max-h-52 overflow-y-auto space-y-0.5">
+                      {availableProducts.filter(p => p.name.includes(productSearchTerm)).map(p => {
+                        const isVisible = !hiddenProductIds.includes(p.id);
+                        return (
+                          <div key={p.id} onClick={() => toggleProductVisibility(p.id)} className="flex items-center gap-2 p-2 hover:bg-slate-50 rounded cursor-pointer text-xs">
+                            {isVisible ? <CheckSquare size={16} className="text-slate-800 shrink-0" /> : <Square size={16} className="text-slate-300 shrink-0" />}
+                            <span className={`truncate ${isVisible ? 'text-slate-700 font-medium' : 'text-slate-400 line-through'}`}>{p.name}</span>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+                {isProductDropdownOpen && <div className="fixed inset-0 z-[55]" onClick={() => setIsProductDropdownOpen(false)}></div>}
+              </div>
+              <FilterDropdown label="משפחת כשרות" value={filters.kosherFamily} onChange={(val: string) => handleFilterChange('kosherFamily', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.kosherFamilies.map(kf => <option key={kf} value={kf}>{kf}</option>)}
+              </FilterDropdown>
+              <FilterDropdown label="סוג כשרות" value={filters.kosherType} onChange={(val: string) => handleFilterChange('kosherType', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.kosherTypes.map(kt => <option key={kt} value={kt}>{kt}</option>)}
+              </FilterDropdown>
+              <FilterDropdown label="מחלקה" value={filters.department} onChange={(val: string) => handleFilterChange('department', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.departments.map(d => <option key={d} value={d}>{d}</option>)}
+              </FilterDropdown>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-5 gap-3">
+              <FilterDropdown label="X9" value={filters.isX9} onChange={(val: string) => handleFilterChange('isX9', val)}>
+                <option value="all">הכל</option>
+                <option value="true">כן</option>
+                <option value="false">לא</option>
+              </FilterDropdown>
+              <FilterDropdown label="סטייק" value={filters.isSteak} onChange={(val: string) => handleFilterChange('isSteak', val)}>
+                <option value="all">הכל</option>
+                <option value="true">כן</option>
+                <option value="false">לא</option>
+              </FilterDropdown>
+              <FilterDropdown label="טריות" value={filters.freshness} onChange={(val: string) => handleFilterChange('freshness', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.freshnessOpts.map(f => <option key={f} value={f}>{f === 'frozen' ? 'קפוא' : f === 'fresh' ? 'טרי' : f}</option>)}
+              </FilterDropdown>
+              <FilterDropdown label="זן" value={filters.breed} onChange={(val: string) => handleFilterChange('breed', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.breedOpts.map(b => <option key={b} value={b}>{b === 'feed lot' ? 'פידלוט' : b === 'normal' ? 'רגיל' : b}</option>)}
+              </FilterDropdown>
+              <FilterDropdown label="לקוח" value={filters.customer} onChange={(val: string) => handleFilterChange('customer', val)}>
+                <option value="all">הכל</option>
+                {dynamicOptions.customers.map(c => <option key={c} value={c}>{c}</option>)}
+              </FilterDropdown>
+            </div>
+          </div>
+
+          {/* Table */}
           <div className="flex-1 overflow-auto">
             <table className="w-full text-right text-sm">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium sticky top-0">
@@ -618,7 +744,7 @@ export default function ProductionPage() {
                 {filteredSortedData.map(product => (
                   <tr key={product.id} className="hover:bg-slate-50">
                     <td className="px-6 py-2.5 font-bold text-sm">
-                      <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#FF3300' : '#008000' }}>
+                      <span style={{ color: product.kosher.toLowerCase() === 'halak' ? '#cc2200' : '#15803d' }}>
                         {product.name}
                       </span>
                       {product.isX9 && <span className="mr-2 text-[10px] font-bold bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded">X9</span>}
@@ -660,10 +786,10 @@ function YieldCard({ title, inVal, outVal, variant, isX9 }: any) {
    const pct = inVal > 0 ? (outVal / inVal) * 100 : 0;
    const styles: any = {
      neutral:  { borderColor: '#E2E8F0', backgroundColor: '#FFFFFF', color: '#0F172A' },
-     halak:    { borderColor: '#FF3300', backgroundColor: 'rgba(255,51,0,0.04)', color: '#FF3300' },
-     muchshar: { borderColor: '#008000', backgroundColor: 'rgba(0,128,0,0.04)', color: '#008000' },
-     blue:     { borderColor: '#FF3300', backgroundColor: 'rgba(255,51,0,0.04)', color: '#FF3300' },
-     orange:   { borderColor: '#008000', backgroundColor: 'rgba(0,128,0,0.04)', color: '#008000' },
+     halak:    { borderColor: '#cc2200', backgroundColor: 'rgba(204,34,0,0.07)', color: '#cc2200' },
+     muchshar: { borderColor: '#15803d', backgroundColor: 'rgba(21,128,61,0.08)', color: '#15803d' },
+     blue:     { borderColor: '#cc2200', backgroundColor: 'rgba(204,34,0,0.07)', color: '#cc2200' },
+     orange:   { borderColor: '#15803d', backgroundColor: 'rgba(21,128,61,0.08)', color: '#15803d' },
    };
    const style = styles[variant] || styles.neutral;
    return (

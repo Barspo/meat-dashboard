@@ -4,11 +4,11 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import { getFactoryPerformance } from '@/app/actions/getFactoryPerformance';
 import { getSeasons, type Season } from '@/app/actions/settingsActions';
 import {
-  CalendarIcon, ChevronDown, ChevronLeft, ChevronRight,
-  ChevronsLeft, ChevronsRight, ArrowUpDown, X, Eye,
+  ChevronDown, ArrowUpDown, X, Eye,
   Factory, Check, Loader2, AlertCircle, Download,
   Maximize2, Minimize2, Building2,
 } from 'lucide-react';
+import { DateRangePicker, QuickBtn, fmtHE, sameDay, calDays, parseHEDate } from '@/components/DateRangePicker';
 import { exportTableToExcel } from '@/lib/exportToExcel';
 
 // ─── Types ───────────────────────────────────────────────────────────────────
@@ -66,23 +66,32 @@ const COLUMNS: ColDef[] = [
   { key: 'halakPctWithoutWaste',    label: '% חלק ללא טרף',     type: 'pct_only',        group: 'halak'    },
   { key: 'muchsharPctWithoutWaste', label: '% מוכשר ללא טרף',   type: 'pct_only',        group: 'muchshar' },
   { key: 'waste1',                  label: 'טרף ריאות',          type: 'value_pct_waste', group: 'waste'    },
-  { key: 'waste2',                  label: 'טרף כרס',            type: 'value_pct_waste', group: 'waste'    },
+  { key: 'waste2',                  label: 'טרף כרסים',          type: 'value_pct_waste', group: 'waste'    },
   { key: 'waste3',                  label: 'טרף אחר',            type: 'value_pct_waste', group: 'waste'    },
   { key: 'cows',                    label: 'פרות',               type: 'value_pct_total', group: 'neutral'  },
   { key: 'bulls',                   label: 'שוורים',             type: 'value_pct_total', group: 'neutral'  },
 ];
 
-// Default: first 11 data columns
-const DEFAULT_VISIBLE = COLUMNS.slice(0, 11).map(c => c.key);
+// Default: first 10 data columns
+const DEFAULT_VISIBLE = COLUMNS.slice(0, 10).map(c => c.key);
 
 // ─── Color Map ────────────────────────────────────────────────────────────────
 
-const COL_COLORS: Record<ColGroup, { val: string; pct: string; bg: string; border: string }> = {
-  total:    { val: '#1e293b', pct: '#475569', bg: '#f1f5f9',              border: '#94a3b8' },
-  halak:    { val: '#cc2200', pct: '#cc2200', bg: 'rgba(204,34,0,0.07)', border: '#cc2200' },
-  muchshar: { val: '#15803d', pct: '#16a34a', bg: 'rgba(21,128,61,0.08)',border: '#15803d' },
-  waste:    { val: '#475569', pct: '#64748b', bg: '#f1f5f9',              border: '#94a3b8' },
-  neutral:  { val: '#334155', pct: '#64748b', bg: '#f8fafc',              border: '#94a3b8' },
+interface ColColors {
+  val: string;
+  pct: string;
+  bg: string;
+  border: string;
+  dimVal: string;   // muted color for OFF state in column manager
+  dimBorder: string;
+}
+
+const COL_COLORS: Record<ColGroup, ColColors> = {
+  total:    { val: '#1e293b', pct: '#475569', bg: '#f1f5f9',              border: '#94a3b8', dimVal: '#c8d3df', dimBorder: '#dde5ef' },
+  halak:    { val: '#cc2200', pct: '#cc2200', bg: 'rgba(204,34,0,0.07)', border: '#cc2200', dimVal: '#f0a090', dimBorder: '#f5bfb5' },
+  muchshar: { val: '#15803d', pct: '#16a34a', bg: 'rgba(21,128,61,0.08)',border: '#15803d', dimVal: '#7ac49a', dimBorder: '#a3d4b8' },
+  waste:    { val: '#475569', pct: '#64748b', bg: '#f1f5f9',              border: '#94a3b8', dimVal: '#c8d3df', dimBorder: '#dde5ef' },
+  neutral:  { val: '#334155', pct: '#64748b', bg: '#f8fafc',              border: '#94a3b8', dimVal: '#c8d3df', dimBorder: '#dde5ef' },
 };
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -93,32 +102,6 @@ const fmtDate = (d: Date) => {
   const day = String(d.getDate()).padStart(2, '0');
   return `${y}-${m}-${day}`;
 };
-
-const fmtHE = (d: Date | null) => d?.toLocaleDateString('he-IL') ?? '';
-
-function sameDay(a: Date | null, b: Date | null) {
-  return !!a && !!b &&
-    a.getFullYear() === b.getFullYear() &&
-    a.getMonth() === b.getMonth() &&
-    a.getDate() === b.getDate();
-}
-
-function calDays(d: Date): (Date | null)[] {
-  const y = d.getFullYear(), mo = d.getMonth();
-  const dim = new Date(y, mo + 1, 0).getDate();
-  const startDay = new Date(y, mo, 1).getDay();
-  const days: (Date | null)[] = [];
-  for (let i = 0; i < startDay; i++) days.push(null);
-  for (let i = 1; i <= dim; i++) days.push(new Date(y, mo, i));
-  return days;
-}
-
-function parseHEDate(str: string): Date | null {
-  const m = str.match(/^(\d{1,2})[./\-](\d{1,2})[./\-](\d{4})$/);
-  if (!m) return null;
-  const d = new Date(+m[3], +m[2] - 1, +m[1]);
-  return isNaN(d.getTime()) ? null : d;
-}
 
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
@@ -132,6 +115,7 @@ export default function PerformancePage() {
   const [factoriesReady, setFactoriesReady] = useState(false);
   const [selectedCountries, setSelectedCountries] = useState<Set<string>>(new Set());
   const [countriesReady, setCountriesReady] = useState(false);
+  const [selectedSeasonName, setSelectedSeasonName] = useState<string | null>(null);
   const [visibleColumns, setVisibleColumns] = useState<string[]>(DEFAULT_VISIBLE);
   const [sortConfig, setSortConfig] = useState<{ key: string; direction: 'asc' | 'desc' }>({ key: 'total', direction: 'desc' });
   const [isFullscreen, setIsFullscreen] = useState(false);
@@ -144,6 +128,7 @@ export default function PerformancePage() {
       if (cur) {
         setStartDate(new Date(cur.start_date + 'T12:00:00'));
         setEndDate(new Date(cur.end_date + 'T12:00:00'));
+        setSelectedSeasonName(cur.name_hebrew);
       } else {
         const t = new Date();
         setStartDate(t);
@@ -178,6 +163,16 @@ export default function PerformancePage() {
     }
   }, [data, countriesReady]);
 
+  // When country selection changes → sync factory selection to match
+  const handleSetCountries = (next: Set<string>) => {
+    setSelectedCountries(next);
+    setSelectedFactoryIds(new Set(
+      data
+        .filter(f => !f.countryNameHebrew || next.has(f.countryNameHebrew))
+        .map(f => f.id)
+    ));
+  };
+
   const uniqueCountries = useMemo(() =>
     [...new Set(data.map(f => f.countryNameHebrew).filter(Boolean))].sort() as string[],
   [data]);
@@ -188,24 +183,23 @@ export default function PerformancePage() {
       const two = r.total - r.wasteTotal;
       return {
         ...r,
-        halakPct:               r.total > 0    ? r.halak    / r.total    * 100 : 0,
-        muchsharPct:            r.total > 0    ? r.muchshar / r.total    * 100 : 0,
-        wastePct:               r.total > 0    ? r.wasteTotal / r.total  * 100 : 0,
+        halakPct:               r.total > 0      ? r.halak    / r.total    * 100 : 0,
+        muchsharPct:            r.total > 0      ? r.muchshar / r.total    * 100 : 0,
+        wastePct:               r.total > 0      ? r.wasteTotal / r.total  * 100 : 0,
         totalWithoutWaste:      two,
-        halakPctWithoutWaste:   two > 0        ? r.halak    / two        * 100 : 0,
-        muchsharPctWithoutWaste:two > 0        ? r.muchshar / two        * 100 : 0,
-        cowsPct:                r.total > 0    ? r.cows     / r.total    * 100 : 0,
-        bullsPct:               r.total > 0    ? r.bulls    / r.total    * 100 : 0,
-        waste1Pct:              r.wasteTotal > 0 ? r.waste1 / r.wasteTotal * 100 : 0,
-        waste2Pct:              r.wasteTotal > 0 ? r.waste2 / r.wasteTotal * 100 : 0,
-        waste3Pct:              r.wasteTotal > 0 ? r.waste3 / r.wasteTotal * 100 : 0,
+        halakPctWithoutWaste:   two > 0          ? r.halak    / two        * 100 : 0,
+        muchsharPctWithoutWaste:two > 0          ? r.muchshar / two        * 100 : 0,
+        cowsPct:                r.total > 0      ? r.cows     / r.total    * 100 : 0,
+        bullsPct:               r.total > 0      ? r.bulls    / r.total    * 100 : 0,
+        waste1Pct:              r.wasteTotal > 0 ? r.waste1   / r.wasteTotal * 100 : 0,
+        waste2Pct:              r.wasteTotal > 0 ? r.waste2   / r.wasteTotal * 100 : 0,
+        waste3Pct:              r.wasteTotal > 0 ? r.waste3   / r.wasteTotal * 100 : 0,
       };
     }),
   [data]);
 
   const filteredData = useMemo(() => {
     let f = enriched.filter(r => selectedFactoryIds.has(r.id));
-    // Factories with no country always pass; others filtered by selectedCountries
     f = f.filter(r => !r.countryNameHebrew || selectedCountries.has(r.countryNameHebrew));
     return [...f].sort((a: any, b: any) => {
       if (a[sortConfig.key] < b[sortConfig.key]) return sortConfig.direction === 'asc' ? -1 : 1;
@@ -231,22 +225,44 @@ export default function PerformancePage() {
 
   const handleExport = () => {
     const cols = COLUMNS.filter(c => visibleColumns.includes(c.key));
+    const summary = computeSummary(filteredData);
+
+    const dataRows = filteredData.map(row => ({
+      name: row.name,
+      ...Object.fromEntries(cols.map(c => [c.key, (row as any)[c.key]])),
+    }));
+
+    // Summary row at the bottom
+    const summaryRow = summary
+      ? {
+          name: `סה״כ (${filteredData.length} מפעלים)`,
+          ...Object.fromEntries(
+            cols.map(c => {
+              const val = (summary as any)[c.key] as number;
+              if (c.type === 'pct_only') return [c.key, `${val.toFixed(1)}%`];
+              if (c.type === 'value_pct_total' || c.type === 'value_pct_waste') {
+                const pct = ((summary as any)[c.key + 'Pct'] as number) ?? 0;
+                return [c.key, `${val.toLocaleString()} (${pct.toFixed(1)}%)`];
+              }
+              return [c.key, val];
+            })
+          ),
+        }
+      : null;
+
     exportTableToExcel(
       [{ key: 'name', header: 'מפעל' }, ...cols.map(c => ({ key: c.key, header: c.label }))],
-      filteredData.map(row => ({
-        name: row.name,
-        ...Object.fromEntries(cols.map(c => [c.key, (row as any)[c.key]])),
-      })),
+      summaryRow ? [...dataRows, { name: '---', ...Object.fromEntries(cols.map(c => [c.key, ''])) }, summaryRow] : dataRows,
       `ביצועי-מפעלים-${dateLabel}`
     );
   };
 
-  // Shared props passed to filter bar
   const filterBarProps = {
     data, seasons,
     selectedFactoryIds, setSelectedFactoryIds,
-    uniqueCountries, selectedCountries, setSelectedCountries,
+    uniqueCountries, selectedCountries, setSelectedCountries: handleSetCountries,
     startDate, endDate, setStartDate, setEndDate,
+    selectedSeasonName, setSelectedSeasonName,
   };
 
   const colManagerProps = { visibleColumns, setVisibleColumns, toggleColumn };
@@ -256,7 +272,6 @@ export default function PerformancePage() {
     onSort: handleSort, onToggleColumn: toggleColumn,
   };
 
-  // The section rendered inside both normal view and fullscreen
   const sectionContent = (
     <div className="space-y-4">
       <FilterBar {...filterBarProps} />
@@ -274,6 +289,7 @@ export default function PerformancePage() {
       ) : (
         <>
           <ColumnManager {...colManagerProps} />
+          <SummaryBar filteredData={filteredData} visibleColumns={visibleColumns} />
           <PerformanceTable {...tableProps} />
         </>
       )}
@@ -312,11 +328,9 @@ export default function PerformancePage() {
       {isFullscreen && (
         <div className="fixed inset-0 z-[9999] bg-slate-50 overflow-auto" dir="rtl">
           <div className="p-6 max-w-[1900px] mx-auto space-y-4">
-
-            {/* Fullscreen header */}
-            <div className="flex items-center justify-between">
+            <div className="relative flex items-center justify-center py-1">
               <h2 className="text-2xl font-black text-slate-800">ביצועי מפעלים</h2>
-              <div className="flex gap-2">
+              <div className="absolute left-0 flex gap-2">
                 <button
                   onClick={handleExport}
                   disabled={loading || filteredData.length === 0}
@@ -332,7 +346,6 @@ export default function PerformancePage() {
                 </button>
               </div>
             </div>
-
             {sectionContent}
           </div>
         </div>
@@ -355,6 +368,8 @@ interface FilterBarProps {
   endDate: Date | null;
   setStartDate: (d: Date | null) => void;
   setEndDate: (d: Date | null) => void;
+  selectedSeasonName: string | null;
+  setSelectedSeasonName: (n: string | null) => void;
 }
 
 function FilterBar(props: FilterBarProps) {
@@ -387,6 +402,8 @@ function FilterBar(props: FilterBarProps) {
           endDate={props.endDate}
           setStartDate={props.setStartDate}
           setEndDate={props.setEndDate}
+          selectedSeasonName={props.selectedSeasonName}
+          setSelectedSeasonName={props.setSelectedSeasonName}
         />
 
       </div>
@@ -573,276 +590,110 @@ function CountryDropdown({ uniqueCountries, selectedCountries, setSelectedCountr
   );
 }
 
-// ─── Date Range Picker ────────────────────────────────────────────────────────
+// ─── Summary Bar ──────────────────────────────────────────────────────────────
 
-function DateRangePicker({ seasons, startDate, endDate, setStartDate, setEndDate }: {
-  seasons: Season[];
-  startDate: Date | null;
-  endDate: Date | null;
-  setStartDate: (d: Date | null) => void;
-  setEndDate: (d: Date | null) => void;
-}) {
-  const [open, setOpen] = useState(false);
-  const [seasonOpen, setSeasonOpen] = useState(false);
-  const [calMonth, setCalMonth] = useState(() => startDate ?? new Date());
-  const [fromInput, setFromInput] = useState('');
-  const [toInput, setToInput] = useState('');
-  const ref = useRef<HTMLDivElement>(null);
-
-  // Sync calendar month when startDate changes
-  useEffect(() => {
-    if (startDate) setCalMonth(startDate);
-  }, [startDate]);
-
-  // Sync text inputs with date state
-  useEffect(() => {
-    setFromInput(startDate ? startDate.toLocaleDateString('he-IL') : '');
-    setToInput(endDate ? endDate.toLocaleDateString('he-IL') : '');
-  }, [startDate, endDate]);
-
-  useEffect(() => {
-    const h = (e: MouseEvent) => {
-      if (ref.current && !ref.current.contains(e.target as Node)) {
-        setOpen(false);
-        setSeasonOpen(false);
-      }
-    };
-    document.addEventListener('mousedown', h);
-    return () => document.removeEventListener('mousedown', h);
-  }, []);
-
-  const setQuick = (s: Date, e: Date) => {
-    setStartDate(s);
-    setEndDate(e);
-    setOpen(false);
+function computeSummary(data: EnrichedRow[]) {
+  if (data.length === 0) return null;
+  const sumTotal        = data.reduce((a, r) => a + r.total, 0);
+  const sumHalak        = data.reduce((a, r) => a + r.halak, 0);
+  const sumMuchshar     = data.reduce((a, r) => a + r.muchshar, 0);
+  const sumWasteTotal   = data.reduce((a, r) => a + r.wasteTotal, 0);
+  const sumWaste1       = data.reduce((a, r) => a + r.waste1, 0);
+  const sumWaste2       = data.reduce((a, r) => a + r.waste2, 0);
+  const sumWaste3       = data.reduce((a, r) => a + r.waste3, 0);
+  const sumCows         = data.reduce((a, r) => a + r.cows, 0);
+  const sumBulls        = data.reduce((a, r) => a + r.bulls, 0);
+  const sumTWW          = sumTotal - sumWasteTotal;
+  return {
+    total:                   sumTotal,
+    halak:                   sumHalak,
+    halakPct:                sumTotal > 0      ? sumHalak    / sumTotal    * 100 : 0,
+    muchshar:                sumMuchshar,
+    muchsharPct:             sumTotal > 0      ? sumMuchshar / sumTotal    * 100 : 0,
+    wasteTotal:              sumWasteTotal,
+    wastePct:                sumTotal > 0      ? sumWasteTotal / sumTotal  * 100 : 0,
+    totalWithoutWaste:       sumTWW,
+    halakPctWithoutWaste:    sumTWW > 0        ? sumHalak    / sumTWW      * 100 : 0,
+    muchsharPctWithoutWaste: sumTWW > 0        ? sumMuchshar / sumTWW      * 100 : 0,
+    waste1:                  sumWaste1,
+    waste1Pct:               sumWasteTotal > 0 ? sumWaste1   / sumWasteTotal * 100 : 0,
+    waste2:                  sumWaste2,
+    waste2Pct:               sumWasteTotal > 0 ? sumWaste2   / sumWasteTotal * 100 : 0,
+    waste3:                  sumWaste3,
+    waste3Pct:               sumWasteTotal > 0 ? sumWaste3   / sumWasteTotal * 100 : 0,
+    cows:                    sumCows,
+    cowsPct:                 sumTotal > 0      ? sumCows     / sumTotal    * 100 : 0,
+    bulls:                   sumBulls,
+    bullsPct:                sumTotal > 0      ? sumBulls    / sumTotal    * 100 : 0,
   };
-
-  const handleDayClick = (day: Date) => {
-    if (!startDate || (startDate && endDate)) {
-      // Start new selection
-      setStartDate(day);
-      setEndDate(null);
-    } else if (day >= startDate) {
-      // Complete the range and auto-close
-      setEndDate(day);
-      setOpen(false);
-    } else {
-      // Clicked before start — restart
-      setStartDate(day);
-      setEndDate(null);
-    }
-  };
-
-  const handleFromInput = (val: string) => {
-    setFromInput(val);
-    const d = parseHEDate(val);
-    if (d) { setStartDate(d); setCalMonth(d); }
-  };
-
-  const handleToInput = (val: string) => {
-    setToInput(val);
-    const d = parseHEDate(val);
-    if (d && startDate && d >= startDate) {
-      setEndDate(d);
-      setOpen(false); // auto-close on valid range
-    }
-  };
-
-  const today = new Date();
-  const calLabel = startDate && endDate
-    ? `${fmtHE(startDate)} — ${fmtHE(endDate)}`
-    : 'בחירת תאריכים';
-
-  return (
-    <div ref={ref} className="relative flex-shrink-0">
-      <div className="flex items-start gap-3 flex-wrap">
-
-        {/* Calendar trigger */}
-        <div>
-          <span className="block text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">טווח זמן</span>
-          <button
-            onClick={() => setOpen(o => !o)}
-            className={`flex items-center gap-2 px-3 py-2 rounded-xl border text-sm font-bold transition-all min-w-[240px] justify-between ${
-              open
-                ? 'border-blue-400 bg-blue-50 text-blue-700'
-                : 'border-slate-200 bg-white text-slate-700 hover:border-slate-300 hover:bg-slate-50'
-            }`}
-          >
-            <div className="flex items-center gap-2">
-              <CalendarIcon size={15} className={open ? 'text-blue-500' : 'text-slate-400'} />
-              <span>{calLabel}</span>
-            </div>
-            <ChevronDown size={14} className={`text-slate-400 transition-transform ${open ? 'rotate-180' : ''}`} />
-          </button>
-        </div>
-
-        {/* Quick shortcuts */}
-        <div>
-          <span className="block text-[10px] font-bold text-transparent uppercase tracking-wider mb-1.5 select-none">.</span>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <QuickBtn label="היום" onClick={() => setQuick(today, today)} />
-            <QuickBtn label="אתמול" onClick={() => {
-              const y = new Date(today); y.setDate(y.getDate() - 1); setQuick(y, y);
-            }} />
-            <QuickBtn label="שבוע נוכחי" onClick={() => {
-              const s = new Date(today); s.setDate(s.getDate() - s.getDay()); setQuick(s, today);
-            }} />
-            <QuickBtn label="חודש נוכחי" onClick={() =>
-              setQuick(new Date(today.getFullYear(), today.getMonth(), 1), today)
-            } />
-
-            {seasons.length > 0 && (
-              <div className="relative">
-                <button
-                  onClick={() => setSeasonOpen(v => !v)}
-                  className="flex items-center gap-1 px-3 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 transition-colors"
-                >
-                  עונה <ChevronDown size={11} className={`transition-transform ${seasonOpen ? 'rotate-180' : ''}`} />
-                </button>
-                {seasonOpen && (
-                  <div className="absolute top-full right-0 mt-1 bg-white border border-slate-200 shadow-xl rounded-xl z-50 min-w-[175px] py-1">
-                    {seasons.map(s => (
-                      <button
-                        key={s.id}
-                        onClick={() => {
-                          setStartDate(new Date(s.start_date + 'T12:00:00'));
-                          setEndDate(new Date(s.end_date + 'T12:00:00'));
-                          setSeasonOpen(false);
-                          setOpen(false);
-                        }}
-                        className="w-full text-right px-4 py-2.5 text-xs font-bold text-slate-700 hover:bg-blue-50 hover:text-blue-700 flex justify-between items-center transition-colors"
-                      >
-                        <span>{s.name_hebrew}</span>
-                        {s.is_current && (
-                          <span className="text-[10px] text-blue-600 bg-blue-50 border border-blue-200 px-1.5 py-0.5 rounded font-bold">נוכחי</span>
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-          </div>
-        </div>
-      </div>
-
-      {/* ─── Calendar Panel ─── */}
-      {open && (
-        <div className="absolute top-full mt-2 right-0 bg-white border border-slate-200 shadow-2xl rounded-2xl z-50 p-5 w-[360px]">
-
-          {/* Manual text inputs */}
-          <div className="grid grid-cols-2 gap-3 mb-5">
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">מתאריך</div>
-              <input
-                type="text"
-                value={fromInput}
-                onChange={e => handleFromInput(e.target.value)}
-                placeholder="dd/mm/yyyy"
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-medium text-center focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-              />
-            </div>
-            <div>
-              <div className="text-[10px] font-bold text-slate-400 uppercase tracking-wide mb-1.5">עד תאריך</div>
-              <input
-                type="text"
-                value={toInput}
-                onChange={e => handleToInput(e.target.value)}
-                placeholder="dd/mm/yyyy"
-                className="w-full px-3 py-2 border border-slate-200 rounded-xl text-sm font-medium text-center focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all"
-              />
-            </div>
-          </div>
-
-          {/* Month / Year navigation */}
-          <div className="flex justify-between items-center mb-4">
-            <button
-              onClick={() => setCalMonth(m => new Date(m.getFullYear() - 1, m.getMonth(), 1))}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-              title="שנה קודמת"
-            >
-              <ChevronsRight size={15} />
-            </button>
-            <button
-              onClick={() => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() - 1, 1))}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-            >
-              <ChevronRight size={15} />
-            </button>
-            <span className="text-sm font-bold text-slate-800 min-w-[140px] text-center">
-              {calMonth.toLocaleDateString('he-IL', { month: 'long', year: 'numeric' })}
-            </span>
-            <button
-              onClick={() => setCalMonth(m => new Date(m.getFullYear(), m.getMonth() + 1, 1))}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-            >
-              <ChevronLeft size={15} />
-            </button>
-            <button
-              onClick={() => setCalMonth(m => new Date(m.getFullYear() + 1, m.getMonth(), 1))}
-              className="p-1.5 hover:bg-slate-100 rounded-lg text-slate-400 hover:text-slate-700 transition-colors"
-              title="שנה הבאה"
-            >
-              <ChevronsLeft size={15} />
-            </button>
-          </div>
-
-          {/* Day headers */}
-          <div className="grid grid-cols-7 gap-1 text-center text-[10px] font-bold text-slate-400 mb-2">
-            {['א', 'ב', 'ג', 'ד', 'ה', 'ו', 'ש'].map(d => <div key={d}>{d}</div>)}
-          </div>
-
-          {/* Days grid */}
-          <div className="grid grid-cols-7 gap-1">
-            {calDays(calMonth).map((day, i) => {
-              if (!day) return <div key={i} />;
-              const isStart = sameDay(day, startDate);
-              const isEnd = sameDay(day, endDate);
-              const inRange = startDate && endDate && day > startDate && day < endDate;
-              const isToday = sameDay(day, new Date());
-              return (
-                <button
-                  key={i}
-                  onClick={() => handleDayClick(day)}
-                  className={`h-9 w-full rounded-lg text-sm font-medium transition-all relative ${
-                    isStart || isEnd
-                      ? 'bg-blue-600 text-white font-bold shadow-sm'
-                      : inRange
-                      ? 'bg-blue-50 text-blue-700'
-                      : 'hover:bg-slate-100 text-slate-700'
-                  }`}
-                >
-                  {day.getDate()}
-                  {isToday && !isStart && !isEnd && (
-                    <span className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 rounded-full bg-blue-400" />
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {/* Status hint */}
-          <div className="mt-4 pt-3 border-t border-slate-100 text-center text-[11px] text-slate-400 font-medium">
-            {!startDate
-              ? 'לחץ לבחירת תאריך התחלה'
-              : !endDate
-              ? 'לחץ לבחירת תאריך סיום'
-              : '✓ טווח נבחר'}
-          </div>
-        </div>
-      )}
-    </div>
-  );
 }
 
-function QuickBtn({ label, onClick }: { label: string; onClick: () => void }) {
+// Colors optimized for the dark (slate-800) summary bar background
+const SUMMARY_COLORS: Record<ColGroup, { val: string; pct: string; label: string }> = {
+  total:    { val: '#f1f5f9', pct: '#94a3b8', label: '#64748b' },
+  halak:    { val: '#fca5a5', pct: '#fca5a5', label: '#f87171' },
+  muchshar: { val: '#86efac', pct: '#86efac', label: '#4ade80' },
+  waste:    { val: '#94a3b8', pct: '#94a3b8', label: '#64748b' },
+  neutral:  { val: '#e2e8f0', pct: '#94a3b8', label: '#64748b' },
+};
+
+function SummaryBar({ filteredData, visibleColumns }: {
+  filteredData: EnrichedRow[];
+  visibleColumns: string[];
+}) {
+  const summary = computeSummary(filteredData);
+  if (!summary || filteredData.length === 0) return null;
+
+  const visCols = COLUMNS.filter(c => visibleColumns.includes(c.key));
+
+  const renderValue = (col: ColDef) => {
+    const sc = SUMMARY_COLORS[col.group];
+    const val = (summary as any)[col.key] as number;
+
+    if (col.type === 'pct_only') {
+      return (
+        <span className="text-base font-black" style={{ color: sc.pct }}>
+          {val.toFixed(1)}%
+        </span>
+      );
+    }
+    if (col.type === 'simple') {
+      return (
+        <span className="text-base font-mono font-black" style={{ color: sc.val }}>
+          {val.toLocaleString()}
+        </span>
+      );
+    }
+    // value_pct_total / value_pct_waste
+    const pct = ((summary as any)[col.key + 'Pct'] as number) ?? 0;
+    return (
+      <div className="flex flex-col items-center">
+        <span className="text-base font-mono font-black" style={{ color: sc.val }}>{val.toLocaleString()}</span>
+        <span className="text-xs font-bold" style={{ color: sc.pct }}>{pct.toFixed(1)}%</span>
+      </div>
+    );
+  };
+
   return (
-    <button
-      onClick={onClick}
-      className="px-3 py-2 rounded-xl text-xs font-bold bg-white border border-slate-200 hover:bg-slate-50 text-slate-600 whitespace-nowrap transition-colors"
-    >
-      {label}
-    </button>
+    <div className="bg-slate-800 rounded-xl px-6 py-4 flex flex-wrap justify-center gap-x-6 gap-y-3 items-center" style={{ maxHeight: '8rem', overflow: 'hidden' }}>
+      {/* Label */}
+      <div className="flex flex-col items-center shrink-0 border-l border-slate-600 pl-6 ml-2">
+        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">סה״כ</span>
+        <span className="text-sm font-bold text-slate-300">{filteredData.length}</span>
+        <span className="text-[10px] text-slate-500">מפעלים</span>
+      </div>
+      {visCols.map(col => {
+        const sc = SUMMARY_COLORS[col.group];
+        return (
+          <div key={col.key} className="flex flex-col items-center shrink-0 text-center">
+            <span className="text-[10px] font-bold uppercase tracking-wide mb-1" style={{ color: sc.label }}>
+              {col.label}
+            </span>
+            {renderValue(col)}
+          </div>
+        );
+      })}
+    </div>
   );
 }
 
@@ -876,10 +727,23 @@ function ColumnManager({ visibleColumns, setVisibleColumns, toggleColumn }: {
             <button
               key={col.key}
               onClick={() => toggleColumn(col.key)}
-              className="px-2.5 py-1 rounded-lg text-xs font-bold border transition-all"
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold border transition-all ${
+                on ? '' : 'opacity-60'
+              }`}
               style={on
-                ? { backgroundColor: c.bg, color: c.val, borderColor: c.border + '50' }
-                : { backgroundColor: '#f8fafc', color: '#94a3b8', borderColor: '#e2e8f0' }
+                ? {
+                    backgroundColor: c.bg,
+                    color: c.val,
+                    borderColor: c.border,
+                    borderWidth: '1.5px',
+                    boxShadow: `0 0 0 1px ${c.border}25`,
+                  }
+                : {
+                    backgroundColor: 'white',
+                    color: c.dimVal,
+                    borderColor: c.dimBorder,
+                    borderStyle: 'dashed',
+                  }
               }
             >
               {col.label}
@@ -912,71 +776,79 @@ function PerformanceTable({ filteredData, visibleColumns, sortConfig, onSort, on
   }
 
   return (
-    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden overflow-x-auto">
-      <table className="w-full text-right text-sm min-w-[900px]">
+    <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+      {/*
+        Scrollbar-on-top trick:
+        The outer div is flipped vertically (scaleY -1) so the horizontal scrollbar
+        appears at the top. The inner table is flipped back to normal orientation.
+      */}
+      <div style={{ transform: 'scaleY(-1)', overflowX: 'auto' }}>
+        <table
+          className="w-full text-right text-sm min-w-[900px]"
+          style={{ transform: 'scaleY(-1)' }}
+        >
+          <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold uppercase tracking-wider">
+            <tr>
+              {/* Sticky factory name header */}
+              <th className="px-5 py-4 sticky right-0 bg-slate-50 z-10 border-l border-slate-200 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] w-52 text-slate-400">
+                <div className="flex items-center gap-2">
+                  <Factory size={14} />
+                  שם המפעל
+                </div>
+              </th>
 
-        <thead className="bg-slate-50 border-b border-slate-200 text-xs font-bold text-slate-500 uppercase tracking-wider">
-          <tr>
-            {/* Sticky factory name header */}
-            <th className="px-5 py-4 sticky right-0 bg-slate-50 z-10 border-l border-slate-200 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.05)] w-52">
-              <div className="flex items-center gap-2 text-slate-400">
-                <Factory size={14} />
-                שם המפעל
-              </div>
-            </th>
-
-            {visCols.map(col => {
-              const isSorted = sortConfig.key === col.key;
-              const c = COL_COLORS[col.group];
-              return (
-                <th
-                  key={col.key}
-                  className="px-4 py-4 min-w-[110px] group"
-                  style={isSorted ? { color: c.val } : {}}
-                >
-                  <div
-                    className="flex items-center justify-between cursor-pointer gap-1"
-                    onClick={() => onSort(col.key)}
+              {visCols.map(col => {
+                const isSorted = sortConfig.key === col.key;
+                const c = COL_COLORS[col.group];
+                return (
+                  <th
+                    key={col.key}
+                    className="px-4 py-4 min-w-[110px] group"
+                    style={{ color: c.val }}
                   >
-                    <span className="transition-colors group-hover:text-blue-600">{col.label}</span>
-                    <div className="flex items-center gap-0.5 flex-shrink-0">
-                      <ArrowUpDown
-                        size={12}
-                        className={`transition-opacity ${isSorted ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}
-                        style={isSorted ? { color: c.val } : {}}
-                      />
-                      <button
-                        onClick={e => { e.stopPropagation(); onToggleColumn(col.key); }}
-                        className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-0.5 hover:bg-slate-200 rounded transition-all"
-                        title="הסתר עמודה"
-                      >
-                        <X size={11} />
-                      </button>
+                    <div
+                      className="flex items-center justify-between cursor-pointer gap-1"
+                      onClick={() => onSort(col.key)}
+                    >
+                      <span className="transition-opacity group-hover:opacity-70">{col.label}</span>
+                      <div className="flex items-center gap-0.5 flex-shrink-0">
+                        <ArrowUpDown
+                          size={12}
+                          className={`transition-opacity ${isSorted ? 'opacity-100' : 'opacity-0 group-hover:opacity-50'}`}
+                        />
+                        <button
+                          onClick={e => { e.stopPropagation(); onToggleColumn(col.key); }}
+                          className="opacity-0 group-hover:opacity-60 hover:!opacity-100 p-0.5 hover:bg-slate-200 rounded transition-all"
+                          title="הסתר עמודה"
+                        >
+                          <X size={11} />
+                        </button>
+                      </div>
                     </div>
-                  </div>
-                </th>
-              );
-            })}
-          </tr>
-        </thead>
-
-        <tbody className="divide-y divide-slate-100">
-          {filteredData.map(row => (
-            <tr key={row.id} className="hover:bg-blue-50/20 transition-colors group">
-
-              {/* Sticky factory name cell */}
-              <td className="px-5 py-4 sticky right-0 bg-white group-hover:bg-blue-50/20 border-l border-slate-100 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.04)] transition-colors">
-                <span className="font-bold text-slate-800">{row.name}</span>
-                {row.countryNameHebrew && (
-                  <span className="block text-[11px] text-slate-400 font-medium mt-0.5">{row.countryNameHebrew}</span>
-                )}
-              </td>
-
-              {visCols.map(col => <DataCell key={col.key} col={col} row={row} />)}
+                  </th>
+                );
+              })}
             </tr>
-          ))}
-        </tbody>
-      </table>
+          </thead>
+
+          <tbody className="divide-y divide-slate-100">
+            {filteredData.map(row => (
+              <tr key={row.id} className="hover:bg-blue-50/20 transition-colors group">
+
+                {/* Sticky factory name cell */}
+                <td className="px-5 py-4 sticky right-0 bg-white group-hover:bg-blue-50/20 border-l border-slate-100 shadow-[4px_0_8px_-4px_rgba(0,0,0,0.04)] transition-colors">
+                  <span className="font-bold text-slate-800">{row.name}</span>
+                  {row.countryNameHebrew && (
+                    <span className="block text-[11px] text-slate-400 font-medium mt-0.5">{row.countryNameHebrew}</span>
+                  )}
+                </td>
+
+                {visCols.map(col => <DataCell key={col.key} col={col} row={row} />)}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

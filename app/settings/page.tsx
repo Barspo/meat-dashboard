@@ -5,7 +5,7 @@ import {
   Factory as FactoryIcon, Package, Shield, Users, CalendarDays,
   Plus, Pencil, Trash2, X, Check, Loader2, Search,
   FileSpreadsheet, Upload, Download, AlertTriangle, AlertCircle, CheckCircle2,
-  Dna, Star, Layers, Globe,
+  Dna, Star, Layers, Globe, Database,
 } from 'lucide-react';
 import {
   getFactories, createFactory, updateFactory, toggleFactoryActive, Factory,
@@ -24,11 +24,14 @@ import {
 } from '@/app/actions/uploadProductsAction';
 import { getProductsSampleFile } from '@/app/actions/getSampleFile';
 import { LoadingState } from '@/components/ui/LoadingState';
+import { SingleDatePicker } from '@/components/SingleDatePicker';
 
 type Tab = 'factories' | 'products' | 'departments' | 'breeds' | 'kosher' | 'customers' | 'seasons' | 'countries';
 type KosherSubTab = 'families' | 'types';
+type SettingsSection = 'data';
 
 export default function SettingsPage() {
+  const [settingsSection, setSettingsSection] = useState<SettingsSection>('data');
   const [activeTab, setActiveTab] = useState<Tab>('factories');
   const [loading, setLoading] = useState(true);
 
@@ -258,7 +261,10 @@ export default function SettingsPage() {
         setForm(defaultForm());
       }
     }, []);
+    const [showCount, setShowCount] = useState(20);
     const filtered = products.filter(p => !search || (p.item_id || '').includes(search) || (p.name_hebrew || '').includes(search) || (p.name_foreign || '').includes(search));
+    const visibleProducts = filtered.slice(0, showCount);
+    const hasMore = showCount < filtered.length;
     const canSave = !!form.item_id.trim() && !!form.name_hebrew?.trim() && form.kosher_type_id > 0;
     const handleSave = async () => {
       if (!canSave) return;
@@ -272,7 +278,7 @@ export default function SettingsPage() {
       <>
         <div className="bg-white border border-slate-200 rounded-xl shadow-sm overflow-hidden">
           <div className="overflow-x-auto">
-            <table className="w-full text-right text-sm">
+            <table className="w-full text-right text-sm min-w-[920px]">
               <thead className="bg-slate-50 border-b border-slate-200 text-slate-500 font-medium">
                 <tr>
                   <th className="px-4 py-4">קוד פריט</th>
@@ -288,8 +294,8 @@ export default function SettingsPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {filtered.map(p => (
-                  <tr key={p.item_id} className="hover:bg-slate-50 transition-colors">
+                {visibleProducts.map(p => (
+                  <tr key={p.id} className="hover:bg-slate-50 transition-colors">
                     <td className="px-4 py-3 font-mono text-xs text-slate-500">{p.item_id}</td>
                     <td className="px-4 py-3 font-bold text-slate-800">{p.name_hebrew}</td>
                     <td className="px-4 py-3 text-slate-600 text-xs">{p.name_foreign}</td>
@@ -308,6 +314,19 @@ export default function SettingsPage() {
               </tbody>
             </table>
           </div>
+          {hasMore && (
+            <div className="flex justify-center py-4 border-t border-slate-100">
+              <button onClick={() => setShowCount(c => c + 20)}
+                className="flex items-center gap-2 px-6 py-2.5 rounded-xl text-sm font-bold bg-slate-100 text-slate-700 hover:bg-slate-200 transition-colors">
+                טען עוד ({filtered.length - showCount} נותרו)
+              </button>
+            </div>
+          )}
+          {!hasMore && filtered.length > 20 && (
+            <div className="text-center py-3 text-xs text-slate-400">
+              מציג את כל {filtered.length} המוצרים
+            </div>
+          )}
         </div>
         {modalOpen && (
           <Modal title={editingItem ? 'עריכת מוצר' : 'הוספת מוצר'} onClose={closeModal}>
@@ -549,9 +568,20 @@ export default function SettingsPage() {
                       <td className="px-6 py-3 font-bold text-slate-800">{k.name_english}</td>
                       <td className="px-6 py-3 text-slate-700">{k.name_hebrew}</td>
                       <td className="px-6 py-3">
-                        <span className={`text-xs px-2.5 py-1 rounded-full font-bold ${(k.family_name_english || '').toLowerCase() === 'halak' ? 'bg-blue-50 text-blue-600' : 'bg-orange-50 text-orange-600'}`}>
-                          {k.family_name_hebrew || k.family_name_english}
-                        </span>
+                        {(() => {
+                          const isHalak = (k.family_name_english || '').toLowerCase() === 'halak';
+                          return (
+                            <span
+                              className="text-xs px-2.5 py-1 rounded-full font-bold border"
+                              style={isHalak
+                                ? { color: '#cc2200', background: 'rgba(204,34,0,0.08)', borderColor: '#cc2200' }
+                                : { color: '#15803d', background: 'rgba(21,128,61,0.08)', borderColor: '#15803d' }
+                              }
+                            >
+                              {k.family_name_hebrew || k.family_name_english}
+                            </span>
+                          );
+                        })()}
                       </td>
                       <td className="px-6 py-3">
                         <div className="flex items-center gap-2">
@@ -673,9 +703,14 @@ export default function SettingsPage() {
     };
     const handleSetCurrent = async (id: number) => {
       setSettingCurrent(id);
-      await setCurrentSeason(id);
+      setErrorMsg('');
+      const result = await setCurrentSeason(id);
       setSettingCurrent(null);
-      loadData();
+      if (result.success) {
+        await loadData();
+      } else {
+        setErrorMsg(result.error || 'שגיאה בעדכון עונה נוכחית');
+      }
     };
     const canSaveSeason = !!form.name_hebrew.trim() && !!form.start_date && !!form.end_date;
     return (
@@ -826,11 +861,25 @@ export default function SettingsPage() {
   if (loading) return <LoadingState message="טוען הגדרות..." />;
 
   return (
-    <div className="space-y-6 pb-24" dir="rtl">
-      <div className="flex items-center justify-between">
-        <div>
+    <div className="space-y-5 pb-24" dir="rtl">
+
+      {/* ── Top bar: section pills + actions ── */}
+      <div className="flex items-center justify-between flex-wrap gap-3">
+        <div className="flex items-center gap-3">
           <h1 className="text-2xl font-black text-slate-900">הגדרות</h1>
-          <p className="text-sm text-slate-400 mt-1">ניהול מפעלים, מוצרים, כשרות, לקוחות ועונות</p>
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-sm">
+            <button
+              onClick={() => setSettingsSection('data')}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-bold transition-all ${
+                settingsSection === 'data'
+                  ? 'bg-slate-900 text-white shadow-sm'
+                  : 'text-slate-500 hover:bg-slate-50'
+              }`}
+            >
+              <Database size={15} />
+              ניהול דאטה
+            </button>
+          </div>
         </div>
         <div className="flex items-center gap-2">
           {activeTab === 'products' && (
@@ -847,34 +896,45 @@ export default function SettingsPage() {
           )}
         </div>
       </div>
-      <div className="flex gap-2 flex-wrap">
-        {tabs.map(tab => (
-          <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSearch(''); setDeleteConfirm(null); closeModal(); }}
-            className={`flex items-center gap-2 px-5 py-3 rounded-xl font-bold text-sm transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
-            <tab.icon size={18} />
-            {tab.label}
-            <span className={`text-xs px-2 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'}`}>{tab.count}</span>
-          </button>
-        ))}
-      </div>
-      <div className="relative max-w-md">
-        <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש..." className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
-      </div>
-      {activeTab === 'factories' && <FactoriesTab />}
-      {activeTab === 'products' && <ProductsTab />}
-      {activeTab === 'departments' && <DepartmentsTab />}
-      {activeTab === 'breeds' && <BreedsTab />}
-      {activeTab === 'kosher' && <KosherTab />}
-      {activeTab === 'customers' && <CustomersTab />}
-      {activeTab === 'seasons' && <SeasonsTab />}
-      {activeTab === 'countries' && <CountriesTab />}
-      {bulkProductOpen && (
-        <BulkProductUploadModal
-          onClose={() => setBulkProductOpen(false)}
-          onSuccess={() => { setBulkProductOpen(false); loadData(); }}
-        />
+
+      {settingsSection === 'data' && (
+        <>
+          {/* ── Tabs ── */}
+          <div className="flex gap-2 flex-wrap">
+            {tabs.map(tab => (
+              <button key={tab.key} onClick={() => { setActiveTab(tab.key); setSearch(''); setDeleteConfirm(null); closeModal(); }}
+                className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-sm transition-all ${activeTab === tab.key ? 'bg-blue-600 text-white shadow-sm' : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'}`}>
+                <tab.icon size={16} />
+                {tab.label}
+                <span className={`text-xs px-1.5 py-0.5 rounded-full ${activeTab === tab.key ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-500'}`}>{tab.count}</span>
+              </button>
+            ))}
+          </div>
+
+          {/* ── Search ── */}
+          <div className="relative max-w-md">
+            <Search className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400" size={18} />
+            <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="חיפוש..." className="w-full pr-10 pl-4 py-2.5 border border-slate-200 rounded-xl bg-white text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+          </div>
+
+          {/* ── Tab content ── */}
+          {activeTab === 'factories' && <FactoriesTab />}
+          {activeTab === 'products' && <ProductsTab />}
+          {activeTab === 'departments' && <DepartmentsTab />}
+          {activeTab === 'breeds' && <BreedsTab />}
+          {activeTab === 'kosher' && <KosherTab />}
+          {activeTab === 'customers' && <CustomersTab />}
+          {activeTab === 'seasons' && <SeasonsTab />}
+          {activeTab === 'countries' && <CountriesTab />}
+          {bulkProductOpen && (
+            <BulkProductUploadModal
+              onClose={() => setBulkProductOpen(false)}
+              onSuccess={() => { setBulkProductOpen(false); loadData(); }}
+            />
+          )}
+        </>
       )}
+
     </div>
   );
 }
@@ -908,7 +968,7 @@ function DateField({ label, value, onChange }: { label: string; value: string; o
   return (
     <div>
       <label className="block text-xs font-bold text-slate-500 mb-1.5">{label}</label>
-      <input type="date" value={value} onChange={e => onChange(e.target.value)} className="w-full px-3 py-2.5 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+      <SingleDatePicker value={value} onChange={onChange} />
     </div>
   );
 }

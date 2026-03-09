@@ -16,6 +16,7 @@ import {
   CheckCircle2, AlertTriangle, AlertCircle, ArrowRight, ArrowLeft,
   ChevronDown, RotateCcw, Home, Eye, Download, X,
 } from 'lucide-react';
+import { SingleDatePicker } from '@/components/SingleDatePicker';
 import { getSlaughterSampleFile, getProductionSampleFile } from '@/app/actions/getSampleFile';
 
 // ---- Types ----
@@ -394,14 +395,12 @@ function StepDetails({
               <label className="block text-xs font-bold text-slate-500 mb-1.5">
                 תאריך ייצור <span className="text-red-400">*</span>
               </label>
-              <input
-                type="date"
+              <SingleDatePicker
                 value={productionDate}
-                onChange={e => onDateChange(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-200 rounded-xl py-2.5 px-4 text-sm font-bold text-slate-700 focus:bg-white focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                onChange={onDateChange}
+                placeholder="בחר תאריך ייצור"
               />
             </div>
-
           </>
         )}
       </div>

@@ -2,179 +2,185 @@
 
 import { query } from '@/lib/db';
 
-export type AlertSeverity = 'error' | 'warning' | 'info' | 'success';
-export type AlertCategory = 'waste' | 'production' | 'slaughter' | 'system' | 'upload';
+export type AlertType = 'file_matching' | 'anomaly' | 'factory' | 'upload';
 
-export interface Alert {
+export interface AlertItem {
   id: string;
-  severity: AlertSeverity;
-  category: AlertCategory;
-  title: string;
-  message: string;
-  factoryName?: string;
+  name: string;
+  detail: string;
+  type: AlertType;
+  type_label: string;
   date: string;
-  value?: number;
-  threshold?: number;
-  // upload-specific fields
-  fileName?: string;
-  uploadType?: string;
-  uploadMethod?: string;
-  status?: string;
-  errorDetails?: string | null;
+  severity: 'error' | 'warning' | 'info';
 }
 
-export async function getAlerts(): Promise<Alert[]> {
+export async function getAlerts(params: {
+  startDate?: string;
+  endDate?: string;
+  type?: AlertType | 'all';
+  uploadStatus?: 'all' | 'success' | 'error';
+} = {}): Promise<AlertItem[]> {
+  const alerts: AlertItem[] = [];
+  const { startDate, endDate, type = 'all', uploadStatus = 'all' } = params;
+
   try {
-    const alerts: Alert[] = [];
-    const today = new Date().toLocaleDateString('he-IL');
+    // ── 1. שיוך קבצים — Unlinked slaughter / production ──────────────────
+    if (type === 'all' || type === 'file_matching') {
+      const q1P: unknown[] = [];
+      let q1W = '';
+      if (startDate) { q1P.push(startDate); q1W += ` AND sb.date >= $${q1P.length}::date`; }
+      if (endDate)   { q1P.push(endDate);   q1W += ` AND sb.date <= $${q1P.length}::date`; }
 
-    // ── 1. Waste % per factory (last 30 days) ──────────────────────────────
-    const wasteResult = await query(`
-      SELECT COALESCE(f.name_hebrew, f.name_english) as factory_name,
-             COALESCE(SUM(sb.cows_count + sb.bulls_count), 0) as total_heads,
-             COALESCE(SUM(COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)), 0) as total_waste
-      FROM slaughter_batches sb
-      JOIN factories f ON sb.factory_id = f.id
-      WHERE sb.date >= CURRENT_DATE - INTERVAL '30 days'
-      GROUP BY f.id, f.name_english, f.name_hebrew
-      HAVING COALESCE(SUM(sb.cows_count + sb.bulls_count), 0) > 0
-    `);
-    for (const row of wasteResult.rows) {
-      const heads = Number(row.total_heads);
-      const waste = Number(row.total_waste);
-      const pct = heads > 0 ? (waste / heads) * 100 : 0;
-      if (pct > 15) {
-        alerts.push({ id: `waste-error-${row.factory_name}`, severity: 'error', category: 'waste',
-          title: 'חריגת פחת קריטית',
-          message: `אחוז הפחת עומד על ${pct.toFixed(1)}% — מעל הסף המותר של 15%`,
-          factoryName: row.factory_name, date: today, value: pct, threshold: 15 });
-      } else if (pct > 12) {
-        alerts.push({ id: `waste-warn-${row.factory_name}`, severity: 'warning', category: 'waste',
-          title: 'התראת פחת',
-          message: `אחוז הפחת מתקרב לסף — ${pct.toFixed(1)}% (הסף הוא 15%)`,
-          factoryName: row.factory_name, date: today, value: pct, threshold: 15 });
+      const unlinkedSlaughter = await query(`
+        SELECT sb.id, sb.date::text AS date, COALESCE(f.name_hebrew, f.name_english) AS factory_name
+        FROM slaughter_batches sb
+        JOIN factories f ON sb.factory_id = f.id
+        LEFT JOIN work_orders wo ON wo.slaughter_batch_id = sb.id AND wo.production_data_id IS NOT NULL
+        WHERE wo.id IS NULL ${q1W}
+        ORDER BY sb.date DESC
+      `, q1P);
+
+      for (const r of unlinkedSlaughter.rows as any[]) {
+        alerts.push({
+          id: `fm-s-${r.id}`,
+          name: 'דוח שחיטה ללא קישור ייצור',
+          detail: `מפעל ${r.factory_name} | תאריך ${r.date}`,
+          type: 'file_matching',
+          type_label: 'שיוך קבצים',
+          date: r.date,
+          severity: 'warning',
+        });
+      }
+
+      const q2P: unknown[] = [];
+      let q2W = '';
+      if (startDate) { q2P.push(startDate); q2W += ` AND pd.date >= $${q2P.length}::date`; }
+      if (endDate)   { q2P.push(endDate);   q2W += ` AND pd.date <= $${q2P.length}::date`; }
+
+      const unlinkedProduction = await query(`
+        SELECT pd.id, pd.date::text AS date
+        FROM production_data pd
+        LEFT JOIN work_orders wo ON wo.production_data_id = pd.id AND wo.slaughter_batch_id IS NOT NULL
+        WHERE wo.id IS NULL ${q2W}
+        ORDER BY pd.date DESC
+      `, q2P);
+
+      for (const r of unlinkedProduction.rows as any[]) {
+        alerts.push({
+          id: `fm-p-${r.id}`,
+          name: 'דוח ייצור ללא קישור שחיטה',
+          detail: `תאריך ${r.date}`,
+          type: 'file_matching',
+          type_label: 'שיוך קבצים',
+          date: r.date,
+          severity: 'warning',
+        });
       }
     }
 
-    // ── 2. Slaughter batches without linked production (via work_orders) ────
-    const unlinkedResult = await query(`
-      SELECT sb.id, sb.date::text, COALESCE(f.name_hebrew, f.name_english) as factory_name,
-             (sb.cows_count + sb.bulls_count) as total_heads
-      FROM slaughter_batches sb
-      JOIN factories f ON sb.factory_id = f.id
-      WHERE NOT EXISTS (
-        SELECT 1 FROM work_orders wo
-        WHERE wo.slaughter_batch_id = sb.id
-          AND wo.production_data_id IS NOT NULL
-      )
-      ORDER BY sb.date DESC
-      LIMIT 20
-    `);
-    for (const row of unlinkedResult.rows) {
-      alerts.push({ id: `unlinked-slaughter-${row.id}`, severity: 'warning', category: 'slaughter',
-        title: 'שחיטה ללא ייצור מקושר',
-        message: `${row.total_heads} ראשים משחיטה מ-${row.date} לא מקושרים לשום דוח ייצור`,
-        factoryName: row.factory_name, date: row.date });
-    }
+    // ── 2. נתונים חריגים — Anomalies ─────────────────────────────────────
+    if (type === 'all' || type === 'anomaly') {
+      const q3P: unknown[] = [];
+      let q3W = '';
+      if (startDate) { q3P.push(startDate); q3W += ` AND sb.date >= $${q3P.length}::date`; }
+      if (endDate)   { q3P.push(endDate);   q3W += ` AND sb.date <= $${q3P.length}::date`; }
 
-    // ── 3. Slaughter/production quarters mismatch (tolerance ±2 quarters) ──
-    const mismatchResult = await query(`
-      SELECT sb.date::text, COALESCE(f.name_hebrew, f.name_english) as factory_name,
-             sb.halak_count, pd.halak_quarters,
-             sb.muchshar_count, pd.kosher_quarters
-      FROM work_orders wo
-      JOIN slaughter_batches sb ON wo.slaughter_batch_id = sb.id
-      JOIN production_data pd ON wo.production_data_id = pd.id
-      JOIN factories f ON sb.factory_id = f.id
-      WHERE ABS(sb.halak_count * 2 - pd.halak_quarters) > 2
-         OR ABS(sb.muchshar_count * 2 - pd.kosher_quarters) > 2
-    `);
-    for (const row of mismatchResult.rows) {
-      const hDiff = Math.abs(Number(row.halak_count) * 2 - Number(row.halak_quarters));
-      const mDiff = Math.abs(Number(row.muchshar_count) * 2 - Number(row.kosher_quarters));
-      alerts.push({ id: `mismatch-${row.factory_name}-${row.date}`, severity: 'warning', category: 'slaughter',
-        title: 'אי-התאמה שחיטה-ייצור',
-        message: `הפרש רבעים: חלק ${hDiff > 2 ? `±${hDiff}` : 'תקין'}, מוכשר ${mDiff > 2 ? `±${mDiff}` : 'תקין'}`,
-        factoryName: row.factory_name, date: row.date });
-    }
+      const anomalies = await query(`
+        SELECT sb.id, sb.date::text AS date,
+               COALESCE(f.name_hebrew, f.name_english) AS factory_name,
+               sb.halak_count, sb.muchshar_count,
+               pd.halak_quarters, pd.kosher_quarters
+        FROM slaughter_batches sb
+        JOIN factories f ON sb.factory_id = f.id
+        JOIN work_orders wo ON wo.slaughter_batch_id = sb.id AND wo.production_data_id IS NOT NULL
+        JOIN production_data pd ON pd.id = wo.production_data_id
+        WHERE (sb.halak_count * 2 <> COALESCE(pd.halak_quarters, 0)
+            OR sb.muchshar_count * 2 <> COALESCE(pd.kosher_quarters, 0)) ${q3W}
+        ORDER BY sb.date DESC
+      `, q3P);
 
-    // ── 4. Active factories with no slaughter in 14+ days ──────────────────
-    const noSlaughterResult = await query(`
-      SELECT COALESCE(f.name_hebrew, f.name_english) as factory_name,
-             MAX(sb.date)::text as last_slaughter_date
-      FROM factories f
-      LEFT JOIN slaughter_batches sb ON f.id = sb.factory_id
-      WHERE f.active = true
-      GROUP BY f.id, f.name_english, f.name_hebrew
-      HAVING MAX(sb.date) < CURRENT_DATE - INTERVAL '14 days'
-          OR MAX(sb.date) IS NULL
-    `);
-    for (const row of noSlaughterResult.rows) {
-      alerts.push({ id: `no-slaughter-${row.factory_name}`, severity: 'info', category: 'slaughter',
-        title: 'חוסר פעילות שחיטה',
-        message: row.last_slaughter_date
-          ? `שחיטה אחרונה לפני 14+ ימים (${row.last_slaughter_date})`
-          : 'לא נמצאו נתוני שחיטה למפעל זה',
-        factoryName: row.factory_name, date: today });
-    }
+      for (const r of anomalies.rows as any[]) {
+        const hE = Number(r.halak_count) * 2;
+        const hA = Number(r.halak_quarters) || 0;
+        const mE = Number(r.muchshar_count) * 2;
+        const mA = Number(r.kosher_quarters) || 0;
+        const parts: string[] = [];
+        if (hE !== hA) parts.push(`חלק: צפוי ${hE}, בפועל ${hA}`);
+        if (mE !== mA) parts.push(`מוכשר: צפוי ${mE}, בפועל ${mA}`);
 
-    // ── 5. Steak yield target 10–13% (last 7 days) ─────────────────────────
-    const steakResult = await query(`
-      SELECT COALESCE(f.name_hebrew, f.name_english) as factory_name,
-             COALESCE(SUM(CASE WHEN p.is_anatomical IS TRUE THEN pr.weight_kg ELSE 0 END), 0) as x9_weight,
-             COALESCE(SUM(CASE WHEN p.is_steak = true THEN pr.weight_kg ELSE 0 END), 0) as steak_weight
-      FROM production_records pr
-      JOIN products p ON pr.product_id = p.id
-      JOIN production_data pd ON pr.production_data_id = pd.id
-      JOIN work_orders wo ON wo.production_data_id = pd.id
-      JOIN slaughter_batches sb ON wo.slaughter_batch_id = sb.id
-      JOIN factories f ON sb.factory_id = f.id
-      WHERE pd.date >= CURRENT_DATE - INTERVAL '7 days'
-      GROUP BY f.id, f.name_english, f.name_hebrew
-      HAVING COALESCE(SUM(CASE WHEN p.is_anatomical IS TRUE THEN pr.weight_kg ELSE 0 END), 0) > 0
-    `);
-    for (const row of steakResult.rows) {
-      const x9 = Number(row.x9_weight);
-      const steak = Number(row.steak_weight);
-      const steakPct = x9 > 0 ? (steak / x9) * 100 : 0;
-      if (steakPct > 0 && (steakPct < 10 || steakPct > 13)) {
-        const tooLow = steakPct < 10;
-        alerts.push({ id: `steak-${row.factory_name}`, severity: 'warning', category: 'production',
-          title: `אחוז סטייקים ${tooLow ? 'נמוך מדי' : 'גבוה מדי'}`,
-          message: `אחוז הסטייקים מ-X9 הוא ${steakPct.toFixed(1)}% — היעד הוא 10%–13%`,
-          factoryName: row.factory_name, date: today, value: steakPct });
+        alerts.push({
+          id: `an-${r.id}`,
+          name: 'אי התאמה ברבעים',
+          detail: `${r.factory_name} | ${r.date} — ${parts.join(', ')}`,
+          type: 'anomaly',
+          type_label: 'נתונים חריגים',
+          date: r.date,
+          severity: 'error',
+        });
       }
     }
 
-    // ── 6. Upload history (last 30 entries) ────────────────────────────────
-    const uploadsResult = await query(`
-      SELECT il.id, il.file_name, il.upload_type, il.status,
-             il.error_details, il.uploaded_at::text as uploaded_at,
-             COALESCE(il.upload_method, 'manual') as upload_method,
-             COALESCE(f.name_hebrew, f.name_english, '-') as factory_name
-      FROM import_logs il
-      LEFT JOIN factories f ON il.factory_id = f.id
-      ORDER BY il.id DESC
-      LIMIT 30
-    `);
-    for (const row of uploadsResult.rows) {
-      const severity: AlertSeverity = row.status === 'error' ? 'error'
-        : row.status === 'partial' ? 'warning'
-        : row.status === 'success' ? 'success' : 'info';
-      alerts.push({
-        id: `upload-${row.id}`,
-        severity,
-        category: 'upload',
-        title: `העלאת ${row.upload_type === 'slaughter' ? 'שחיטה' : 'ייצור'}`,
-        message: row.file_name,
-        factoryName: row.factory_name,
-        date: row.uploaded_at ? row.uploaded_at.slice(0, 16).replace('T', ' ') : today,
-        fileName: row.file_name,
-        uploadType: row.upload_type,
-        uploadMethod: row.upload_method,
-        status: row.status,
-        errorDetails: row.error_details || null,
-      });
+    // ── 3. מפעלים — Factories without uploads for 7+ days ─────────────────
+    if (type === 'all' || type === 'factory') {
+      const inactive = await query(`
+        SELECT f.id, COALESCE(f.name_hebrew, f.name_english) AS name,
+               (SELECT MAX(il.created_at)::text FROM import_logs il WHERE il.factory_id = f.id) AS last_upload
+        FROM factories f
+        WHERE f.active = true
+          AND NOT EXISTS (
+            SELECT 1 FROM import_logs il
+            WHERE il.factory_id = f.id
+              AND il.created_at > NOW() - INTERVAL '7 days'
+          )
+        ORDER BY f.id
+      `);
+
+      for (const r of inactive.rows as any[]) {
+        alerts.push({
+          id: `fac-${r.id}`,
+          name: 'מפעל ללא העלאה מעל שבוע',
+          detail: `${r.name}${r.last_upload ? ` | העלאה אחרונה: ${r.last_upload.substring(0, 10)}` : ' | לא נמצאו העלאות'}`,
+          type: 'factory',
+          type_label: 'מפעלים',
+          date: r.last_upload ? r.last_upload.substring(0, 10) : '',
+          severity: 'warning',
+        });
+      }
+    }
+
+    // ── 4. העלאות — Upload logs ────────────────────────────────────────────
+    if (type === 'all' || type === 'upload') {
+      const q4P: unknown[] = [];
+      let q4W = '';
+      if (startDate)              { q4P.push(startDate);    q4W += ` AND il.created_at::date >= $${q4P.length}::date`; }
+      if (endDate)                { q4P.push(endDate);      q4W += ` AND il.created_at::date <= $${q4P.length}::date`; }
+      if (uploadStatus !== 'all') { q4P.push(uploadStatus); q4W += ` AND il.status = $${q4P.length}`; }
+
+      const uploads = await query(`
+        SELECT il.id, il.file_name, il.upload_type, il.status,
+               COALESCE(il.rows_imported, 0) AS rows_imported,
+               il.error_details,
+               il.created_at::text AS created_at,
+               COALESCE(f.name_hebrew, f.name_english, '-') AS factory_name
+        FROM import_logs il
+        LEFT JOIN factories f ON il.factory_id = f.id
+        WHERE 1=1 ${q4W}
+        ORDER BY il.id DESC
+        LIMIT 200
+      `, q4P);
+
+      for (const r of uploads.rows as any[]) {
+        const isErr = r.status === 'error';
+        alerts.push({
+          id: `up-${r.id}`,
+          name: r.upload_type === 'slaughter' ? 'העלאת קובץ שחיטה' : r.upload_type === 'production' ? 'העלאת קובץ ייצור' : `העלאה: ${r.upload_type}`,
+          detail: `${r.factory_name} | ${r.file_name} | ${r.rows_imported} שורות${isErr && r.error_details ? ` | שגיאה: ${r.error_details}` : ''}`,
+          type: 'upload',
+          type_label: 'העלאות',
+          date: r.created_at ? r.created_at.substring(0, 10) : '',
+          severity: isErr ? 'error' : 'info',
+        });
+      }
     }
 
     return alerts;

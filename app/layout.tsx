@@ -9,8 +9,8 @@ import { Header } from "@/components/Header";
 const inter = Inter({ subsets: ["latin"] });
 
 export const metadata: Metadata = {
-  title: "MeatPro Dashboard",
-  description: "Production Management",
+  title: "ORCAD FOODS",
+  description: "מערכת ניהול - אורכאד פודס",
 };
 
 export default function RootLayout({
