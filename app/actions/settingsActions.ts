@@ -508,7 +508,10 @@ export async function updateSeason(id: number, data: {
 
 export async function setCurrentSeason(id: number): Promise<{ success: boolean; error?: string }> {
   try {
-    await query('UPDATE seasons SET is_current = (id = $1)', [id]);
+    // Step 1: unset all current seasons
+    await query('UPDATE seasons SET is_current = false WHERE is_current = true');
+    // Step 2: set the target season as current
+    await query('UPDATE seasons SET is_current = true WHERE id = $1', [id]);
     return { success: true };
   } catch (error: any) {
     return { success: false, error: error.message };

@@ -22,7 +22,7 @@ export interface ProductionPreviewResult {
 export interface SlaughterBatchOption {
   id: number;
   date: string;
-  total_heads: number;
+  total_slaughtered: number;
   halak_count: number;
   muchshar_count: number;
 }
@@ -30,7 +30,7 @@ export interface SlaughterBatchOption {
 export async function getAvailableSlaughterBatches(factoryId: number): Promise<SlaughterBatchOption[]> {
   const result = await query(
     `SELECT sb.id, sb.date::text,
-            sb.total_slaughtered AS total_heads,
+            sb.total_slaughtered,
             sb.halak_count, sb.muchshar_count
      FROM slaughter_batches sb
      WHERE sb.factory_id = $1

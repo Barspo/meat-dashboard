@@ -17,7 +17,7 @@ export interface DashboardData {
   recentBatches: {
     date: string;
     factoryName: string;
-    totalHeads: number;
+    totalSlaughtered: number;
     halak: number;
     kosher: number;
   }[];
@@ -29,7 +29,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     const kpiSql = `
       SELECT
         (SELECT COUNT(DISTINCT date) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as slaughter_days,
-        (SELECT COALESCE(SUM(cows_count + bulls_count), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_slaughtered,
+        (SELECT COALESCE(SUM(total_slaughtered), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_slaughtered,
         (SELECT COALESCE(SUM(pr.weight_kg), 0)
          FROM production_records pr
          JOIN work_orders wo ON pr.work_order_id = wo.id
@@ -38,11 +38,11 @@ export async function getDashboardData(): Promise<DashboardData | null> {
          FROM work_orders wo
          WHERE wo.production_date >= CURRENT_DATE - INTERVAL '30 days') as active_factories,
         (SELECT COALESCE(SUM(COALESCE(waste_lungs, 0) + COALESCE(waste_inner, 0) + COALESCE(waste_outer, 0)), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_waste,
-        (SELECT COALESCE(SUM(cows_count + bulls_count), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_heads_for_waste
+        (SELECT COALESCE(SUM(total_slaughtered), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_slaughtered_for_waste
     `;
     const kpiResult = await query(kpiSql);
     const kpiRow = kpiResult.rows[0] || {};
-    const totalHeadsForWaste = Number(kpiRow.total_heads_for_waste) || 0;
+    const totalSlaughteredForWaste = Number(kpiRow.total_slaughtered_for_waste) || 0;
     const totalWaste = Number(kpiRow.total_waste) || 0;
 
     // 2. Daily production trend
@@ -85,7 +85,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
     // 5. Recent slaughter batches
     const recentSql = `
       SELECT sb.date, COALESCE(f.name_hebrew, f.name) as factory_name,
-        sb.cows_count + sb.bulls_count as total_heads,
+        sb.total_slaughtered,
         sb.halak_count, sb.muchshar_count
       FROM slaughter_batches sb
       JOIN factories f ON sb.factory_id = f.id
@@ -100,7 +100,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
         totalSlaughtered: Number(kpiRow.total_slaughtered) || 0,
         totalProductionKg: Number(kpiRow.total_production_kg) || 0,
         activeFactories: Number(kpiRow.active_factories) || 0,
-        wastePercent: totalHeadsForWaste > 0 ? Math.round((totalWaste / totalHeadsForWaste) * 1000) / 10 : 0,
+        wastePercent: totalSlaughteredForWaste > 0 ? Math.round((totalWaste / totalSlaughteredForWaste) * 1000) / 10 : 0,
         totalWaste,
       },
       trendData: trendResult.rows.map((r: any) => ({
@@ -118,7 +118,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
       recentBatches: recentResult.rows.map((r: any) => ({
         date: new Date(r.date).toLocaleDateString('he-IL'),
         factoryName: r.factory_name,
-        totalHeads: Number(r.total_heads) || 0,
+        totalSlaughtered: Number(r.total_slaughtered) || 0,
         halak: Number(r.halak_count) || 0,
         kosher: Number(r.muchshar_count) || 0,
       })),

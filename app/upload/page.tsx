@@ -308,7 +308,7 @@ function StepType({ onSelect }: { onSelect: (t: UploadType) => void }) {
               <Beef size={32} className="text-amber-600" />
             </div>
             <h3 className="text-xl font-black text-slate-800 mb-2">דוח שחיטה</h3>
-            <p className="text-sm text-slate-400">העלאת נתוני שחיטה יומיים - ראשים, כשרות ופחת</p>
+            <p className="text-sm text-slate-400">העלאת נתוני שחיטה יומיים - סה״כ שחיטות, כשרות ופחת</p>
           </button>
           <button
             onClick={() => setSampleModal('slaughter')}
@@ -473,8 +473,8 @@ function StepLink({
                 </div>
               </div>
               <div className="text-left">
-                <p className="text-xl font-black text-slate-700">{batch.total_heads.toLocaleString()}</p>
-                <p className="text-[10px] text-slate-400">ראשים</p>
+                <p className="text-xl font-black text-slate-700">{batch.total_slaughtered.toLocaleString()}</p>
+                <p className="text-[10px] text-slate-400">שחיטות</p>
               </div>
             </button>
           ))}
@@ -644,7 +644,7 @@ function StepPreview({
                       <td className="px-3 py-2 font-mono">{row.date}</td>
                       <td className="px-3 py-2 tabular-nums">{row.cows_count}</td>
                       <td className="px-3 py-2 tabular-nums">{row.bulls_count}</td>
-                      <td className="px-3 py-2 tabular-nums font-bold">{row.total_heads}</td>
+                      <td className="px-3 py-2 tabular-nums font-bold">{row.total_slaughtered}</td>
                       <td className="px-3 py-2 tabular-nums">{row.halak_count}</td>
                       <td className="px-3 py-2 tabular-nums">{row.muchshar_count}</td>
                       <td className="px-3 py-2 tabular-nums">{row.waste_lungs}</td>
@@ -941,16 +941,16 @@ function SampleReportModal({ type, onClose }: { type: UploadType; onClose: () =>
                 <table className="w-full text-xs text-right border border-slate-200 rounded-xl overflow-hidden">
                   <thead className="bg-slate-800 text-white">
                     <tr>
-                      {['Date','Cows','Bulls','Halak','Muchshar','Treif','Waste Lungs','Waste Inner','Waste Outer'].map(h => (
+                      {['Date','Total','Cows','Bulls','Halak','Muchshar','Treif','Waste Lungs','Waste Inner','Waste Outer'].map(h => (
                         <th key={h} className="px-3 py-2 font-bold whitespace-nowrap">{h}</th>
                       ))}
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-slate-100">
                     {[
-                      ['2024-01-15','120','80','150','40','10','5','3','2'],
-                      ['2024-01-16','100','70','130','30','10','4','3','3'],
-                      ['2024-01-17','110','90','160','30','10','6','2','2'],
+                      ['2024-01-15','200','120','80','150','40','10','5','3','2'],
+                      ['2024-01-16','170','100','70','130','30','10','4','3','3'],
+                      ['2024-01-17','200','110','90','160','30','10','6','2','2'],
                     ].map((row, i) => (
                       <tr key={i} className={i % 2 === 0 ? 'bg-white' : 'bg-slate-50'}>
                         {row.map((cell, j) => (
@@ -965,6 +965,7 @@ function SampleReportModal({ type, onClose }: { type: UploadType; onClose: () =>
                 <p className="font-bold text-slate-700">הסברים:</p>
                 <ul className="space-y-1 list-none">
                   <li><span className="font-bold text-slate-800">Date</span> — תאריך בפורמט YYYY-MM-DD</li>
+                  <li><span className="font-bold text-slate-800">Total</span> — סה״כ שחיטות</li>
                   <li><span className="font-bold text-slate-800">Cows / Bulls</span> — מספר פרות / שוורים</li>
                   <li><span className="font-bold text-slate-800">Halak / Muchshar</span> — כשרות חלק / מוכשר</li>
                   <li><span className="font-bold text-slate-800">Treif</span> — טריף (מחושב, לא נשמר)</li>

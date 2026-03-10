@@ -11,17 +11,18 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
     const placeholders: string[] = [];
     
     rows.forEach((row, index) => {
-      const i = index * 13; // 13 פרמטרים לכל שורה
+      const i = index * 14; // 14 פרמטרים לכל שורה
 
       placeholders.push(`(
-        $${i+1}, $${i+2}, $${i+3}, $${i+4}, 
-        $${i+5}, $${i+6}, $${i+7}, $${i+8}, 
-        $${i+9}, $${i+10}, $${i+11}, $${i+12}, $${i+13}
+        $${i+1}, $${i+2}, $${i+3}, $${i+4}, $${i+5},
+        $${i+6}, $${i+7}, $${i+8}, $${i+9},
+        $${i+10}, $${i+11}, $${i+12}, $${i+13}, $${i+14}
       )`);
 
       values.push(
         parseInt(factoryId),
-        row.date, 
+        row.date,
+        Number(row.total_slaughtered) || (Number(row.cows) || 0) + (Number(row.bulls) || 0),
         Number(row.cows) || 0,
         Number(row.bulls) || 0,
         Number(row.halak) || 0,
@@ -38,15 +39,16 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
 
     const sql = `
       INSERT INTO slaughter_batches (
-        factory_id, date, cows_count, bulls_count, 
-        halak_count, muchshar_count, 
+        factory_id, date, total_slaughtered, cows_count, bulls_count,
+        halak_count, muchshar_count,
         waste_lungs, waste_inner, waste_outer,
         halak_quarters, kosher_quarters,
         halak_weight_kg, kosher_weight_kg
       )
       VALUES ${placeholders.join(', ')}
-      ON CONFLICT (factory_id, date) 
+      ON CONFLICT (factory_id, date)
       DO UPDATE SET
+        total_slaughtered = EXCLUDED.total_slaughtered,
         cows_count = EXCLUDED.cows_count,
         bulls_count = EXCLUDED.bulls_count,
         halak_count = EXCLUDED.halak_count,

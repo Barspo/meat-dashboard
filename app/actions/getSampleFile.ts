@@ -5,13 +5,13 @@ import * as XLSX from 'xlsx';
 export async function getSlaughterSampleFile(): Promise<string> {
   const wb = XLSX.utils.book_new();
   const data = [
-    ['Date', 'Cows', 'Bulls', 'Halak', 'Muchshar', 'Treif', 'Waste Lungs', 'Waste Inner', 'Waste Outer'],
-    ['2024-01-15', 120, 80, 150, 40, 10, 5, 3, 2],
-    ['2024-01-16', 100, 70, 130, 30, 10, 4, 3, 3],
-    ['2024-01-17', 110, 90, 160, 30, 10, 6, 2, 2],
+    ['Date', 'Total', 'Cows', 'Bulls', 'Halak', 'Muchshar', 'Treif', 'Waste Lungs', 'Waste Inner', 'Waste Outer'],
+    ['2024-01-15', 200, 120, 80, 150, 40, 10, 5, 3, 2],
+    ['2024-01-16', 170, 100, 70, 130, 30, 10, 4, 3, 3],
+    ['2024-01-17', 200, 110, 90, 160, 30, 10, 6, 2, 2],
   ];
   const ws = XLSX.utils.aoa_to_sheet(data);
-  ws['!cols'] = Array(9).fill({ wch: 14 });
+  ws['!cols'] = Array(10).fill({ wch: 14 });
   XLSX.utils.book_append_sheet(wb, ws, 'Slaughter');
   return XLSX.write(wb, { type: 'base64', bookType: 'xlsx' });
 }

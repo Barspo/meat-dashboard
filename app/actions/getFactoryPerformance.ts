@@ -18,7 +18,7 @@ export async function getFactoryPerformance(startDate: string, endDate: string) 
       SELECT
         factory_id,
         COUNT(id)                                                                AS batches_count,
-        SUM(cows_count + bulls_count)                                            AS total,
+        SUM(total_slaughtered)                                                     AS total,
         SUM(cows_count)                                                          AS cows,
         SUM(bulls_count)                                                         AS bulls,
         SUM(halak_count)                                                         AS halak,

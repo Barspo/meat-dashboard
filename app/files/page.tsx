@@ -342,7 +342,7 @@ function SlaughterTable({
             <tr>
               <th className="px-4 py-3 text-right text-slate-600 font-semibold">מפעל</th>
               <th className="px-4 py-3 text-center text-slate-600 font-semibold whitespace-nowrap">תאריך</th>
-              <th className="px-4 py-3 text-center text-slate-700 font-semibold whitespace-nowrap">סה״כ ראשים</th>
+              <th className="px-4 py-3 text-center text-slate-700 font-semibold whitespace-nowrap">סה״כ שחיטות</th>
               <th className="px-4 py-3 text-center text-slate-500 font-semibold">פרות</th>
               <th className="px-4 py-3 text-center text-slate-500 font-semibold">שוורים</th>
               <th className="px-4 py-3 text-center font-semibold" style={{ color: '#cc2200' }}>חלק</th>
@@ -718,7 +718,7 @@ function EditSlaughterModal({
           {/* Row 2: head counts */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className={labelCls}>סה״כ ראשים</label>
+              <label className={labelCls}>סה״כ שחיטות</label>
               <input type="number" min={0} value={totalSlaughtered} onChange={e => setTotalSlaughtered(e.target.value)} className={inputCls} />
             </div>
             <div>
@@ -1096,7 +1096,7 @@ function EditProductionModal({
                         />
                         <span className="font-medium">{s.date}</span>
                         <span className="text-slate-400">
-                          סה״כ: {s.total_heads.toLocaleString()} | חלק: {s.halak_count.toLocaleString()} | מוכשר: {s.muchshar_count.toLocaleString()}
+                          סה״כ: {s.total_slaughtered.toLocaleString()} | חלק: {s.halak_count.toLocaleString()} | מוכשר: {s.muchshar_count.toLocaleString()}
                         </span>
                       </label>
                     ))}

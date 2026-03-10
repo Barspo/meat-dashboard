@@ -4,7 +4,7 @@ import { query } from '@/lib/db';
 
 export interface HomeData {
   activeFactories: number;
-  recentSlaughterDays: { date: string; totalHeads: number; factories: string[] }[];
+  recentSlaughterDays: { date: string; totalSlaughtered: number; factories: string[] }[];
   recentProductionDays: { date: string; totalWeightKg: number; factories: string[] }[];
   recentUploads: {
     id: number;
@@ -21,7 +21,7 @@ export async function getHomeData(): Promise<HomeData> {
     const [factoriesRes, slaughterRes, productionRes, uploadsRes] = await Promise.all([
       query(`SELECT COUNT(*) as cnt FROM factories WHERE active = true`),
       query(`
-        SELECT sb.date::text, SUM(sb.cows_count + sb.bulls_count) as total_heads,
+        SELECT sb.date::text, SUM(sb.total_slaughtered) as total_slaughtered,
                ARRAY_AGG(DISTINCT COALESCE(f.name_hebrew, f.name)) as factories
         FROM slaughter_batches sb
         JOIN factories f ON sb.factory_id = f.id
@@ -56,7 +56,7 @@ export async function getHomeData(): Promise<HomeData> {
       activeFactories: Number(factoriesRes.rows[0]?.cnt) || 0,
       recentSlaughterDays: slaughterRes.rows.map((r: any) => ({
         date: r.date,
-        totalHeads: Number(r.total_heads) || 0,
+        totalSlaughtered: Number(r.total_slaughtered) || 0,
         factories: Array.isArray(r.factories) ? r.factories.filter(Boolean) : [],
       })),
       recentProductionDays: productionRes.rows.map((r: any) => ({

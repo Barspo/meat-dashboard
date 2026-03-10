@@ -49,11 +49,10 @@ export async function uploadSlaughter(
     for (let i = 0; i < parsed.rows.length; i++) {
       const row = parsed.rows[i];
 
-      // Mismatch warning: cows+bulls should equal halak+muchshar+waste_lungs+waste_inner+waste_outer
-      const expected = row.cows_count + row.bulls_count;
+      // Mismatch warning: total_slaughtered should equal halak+muchshar+waste
       const accounted = row.halak_count + row.muchshar_count + row.waste_lungs + row.waste_inner + row.waste_outer;
-      if (expected !== accounted) {
-        warnings.push(`שורה ${i + 1} (${row.date}): סכום ${expected} ראשים לא מתאים לחלוקה ${accounted} (הלק+מוכשר+פחתים)`);
+      if (row.total_slaughtered !== accounted) {
+        warnings.push(`שורה ${i + 1} (${row.date}): סה״כ שחיטות ${row.total_slaughtered} לא מתאים לחלוקה ${accounted} (הלק+מוכשר+פחתים)`);
       }
 
       try {
@@ -74,7 +73,7 @@ export async function uploadSlaughter(
             waste_inner = EXCLUDED.waste_inner,
             waste_outer = EXCLUDED.waste_outer
         `, [
-          factoryId, row.date, row.cows_count + row.bulls_count,
+          factoryId, row.date, row.total_slaughtered,
           row.cows_count, row.bulls_count,
           row.halak_count, row.muchshar_count,
           row.waste_lungs, row.waste_inner, row.waste_outer,

@@ -23,9 +23,9 @@ export async function getAlerts(params: {
   const alerts: AlertItem[] = [];
   const { startDate, endDate, type = 'all', uploadStatus = 'all' } = params;
 
-  try {
-    // ── 1. שיוך קבצים — Unlinked slaughter / production ──────────────────
-    if (type === 'all' || type === 'file_matching') {
+  // ── 1. שיוך קבצים — Unlinked slaughter / production ──────────────────
+  if (type === 'all' || type === 'file_matching') {
+    try {
       const q1P: unknown[] = [];
       let q1W = '';
       if (startDate) { q1P.push(startDate); q1W += ` AND sb.date >= $${q1P.length}::date`; }
@@ -76,10 +76,14 @@ export async function getAlerts(params: {
           severity: 'warning',
         });
       }
+    } catch (e) {
+      console.error('Alerts: file_matching query error:', e);
     }
+  }
 
-    // ── 2. נתונים חריגים — Anomalies ─────────────────────────────────────
-    if (type === 'all' || type === 'anomaly') {
+  // ── 2. נתונים חריגים — Anomalies ─────────────────────────────────────
+  if (type === 'all' || type === 'anomaly') {
+    try {
       const q3P: unknown[] = [];
       let q3W = '';
       if (startDate) { q3P.push(startDate); q3W += ` AND sb.date >= $${q3P.length}::date`; }
@@ -118,19 +122,62 @@ export async function getAlerts(params: {
           severity: 'error',
         });
       }
+    } catch (e) {
+      console.error('Alerts: anomaly query error:', e);
     }
 
-    // ── 3. מפעלים — Factories without uploads for 7+ days ─────────────────
-    if (type === 'all' || type === 'factory') {
+    // 2b. total_slaughtered mismatch — total != halak + muchshar + waste
+    try {
+      const q3bP: unknown[] = [];
+      let q3bW = '';
+      if (startDate) { q3bP.push(startDate); q3bW += ` AND sb.date >= $${q3bP.length}::date`; }
+      if (endDate)   { q3bP.push(endDate);   q3bW += ` AND sb.date <= $${q3bP.length}::date`; }
+
+      const totalMismatch = await query(`
+        SELECT sb.id, sb.date::text AS date,
+               COALESCE(f.name_hebrew, f.name_english) AS factory_name,
+               sb.total_slaughtered,
+               sb.halak_count, sb.muchshar_count,
+               COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0) AS waste_total
+        FROM slaughter_batches sb
+        JOIN factories f ON sb.factory_id = f.id
+        WHERE sb.total_slaughtered <> (
+          sb.halak_count + sb.muchshar_count +
+          COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)
+        ) ${q3bW}
+        ORDER BY sb.date DESC
+      `, q3bP);
+
+      for (const r of totalMismatch.rows as any[]) {
+        const total = Number(r.total_slaughtered);
+        const split = Number(r.halak_count) + Number(r.muchshar_count) + Number(r.waste_total);
+        alerts.push({
+          id: `an-total-${r.id}`,
+          name: 'אי התאמה בסה״כ שחיטות',
+          detail: `${r.factory_name} | ${r.date} — סה״כ: ${total}, חלוקה: ${split} (חלק ${r.halak_count} + מוכשר ${r.muchshar_count} + טרף ${r.waste_total})`,
+          type: 'anomaly',
+          type_label: 'נתונים חריגים',
+          date: r.date,
+          severity: 'warning',
+        });
+      }
+    } catch (e) {
+      console.error('Alerts: total_slaughtered mismatch query error:', e);
+    }
+  }
+
+  // ── 3. מפעלים — Factories without uploads for 7+ days ─────────────────
+  if (type === 'all' || type === 'factory') {
+    try {
       const inactive = await query(`
         SELECT f.id, COALESCE(f.name_hebrew, f.name_english) AS name,
-               (SELECT MAX(il.created_at)::text FROM import_logs il WHERE il.factory_id = f.id) AS last_upload
+               (SELECT MAX(il.id)::text FROM import_logs il WHERE il.factory_id = f.id) AS last_log_id
         FROM factories f
         WHERE f.active = true
           AND NOT EXISTS (
             SELECT 1 FROM import_logs il
             WHERE il.factory_id = f.id
-              AND il.created_at > NOW() - INTERVAL '7 days'
+              AND il.id > (SELECT COALESCE(MAX(il2.id), 0) - 1000 FROM import_logs il2)
           )
         ORDER BY f.id
       `);
@@ -138,29 +185,30 @@ export async function getAlerts(params: {
       for (const r of inactive.rows as any[]) {
         alerts.push({
           id: `fac-${r.id}`,
-          name: 'מפעל ללא העלאה מעל שבוע',
-          detail: `${r.name}${r.last_upload ? ` | העלאה אחרונה: ${r.last_upload.substring(0, 10)}` : ' | לא נמצאו העלאות'}`,
+          name: 'מפעל ללא העלאות אחרונות',
+          detail: `${r.name}${r.last_log_id ? '' : ' | לא נמצאו העלאות'}`,
           type: 'factory',
           type_label: 'מפעלים',
-          date: r.last_upload ? r.last_upload.substring(0, 10) : '',
+          date: '',
           severity: 'warning',
         });
       }
+    } catch (e) {
+      console.error('Alerts: factory query error:', e);
     }
+  }
 
-    // ── 4. העלאות — Upload logs ────────────────────────────────────────────
-    if (type === 'all' || type === 'upload') {
+  // ── 4. העלאות — Upload logs ────────────────────────────────────────────
+  if (type === 'all' || type === 'upload') {
+    try {
       const q4P: unknown[] = [];
       let q4W = '';
-      if (startDate)              { q4P.push(startDate);    q4W += ` AND il.created_at::date >= $${q4P.length}::date`; }
-      if (endDate)                { q4P.push(endDate);      q4W += ` AND il.created_at::date <= $${q4P.length}::date`; }
       if (uploadStatus !== 'all') { q4P.push(uploadStatus); q4W += ` AND il.status = $${q4P.length}`; }
 
       const uploads = await query(`
         SELECT il.id, il.file_name, il.upload_type, il.status,
                COALESCE(il.rows_imported, 0) AS rows_imported,
                il.error_details,
-               il.created_at::text AS created_at,
                COALESCE(f.name_hebrew, f.name_english, '-') AS factory_name
         FROM import_logs il
         LEFT JOIN factories f ON il.factory_id = f.id
@@ -177,15 +225,14 @@ export async function getAlerts(params: {
           detail: `${r.factory_name} | ${r.file_name} | ${r.rows_imported} שורות${isErr && r.error_details ? ` | שגיאה: ${r.error_details}` : ''}`,
           type: 'upload',
           type_label: 'העלאות',
-          date: r.created_at ? r.created_at.substring(0, 10) : '',
+          date: '',
           severity: isErr ? 'error' : 'info',
         });
       }
+    } catch (e) {
+      console.error('Alerts: upload query error:', e);
     }
-
-    return alerts;
-  } catch (error) {
-    console.error('Error fetching alerts:', error);
-    return [];
   }
+
+  return alerts;
 }

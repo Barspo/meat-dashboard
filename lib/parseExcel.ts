@@ -6,13 +6,12 @@ export interface SlaughterRow {
   date: string;           // YYYY-MM-DD
   cows_count: number;
   bulls_count: number;
-  total_heads: number;    // calculated: cows + bulls
+  total_slaughtered: number;  // from file (independent field)
   halak_count: number;
   muchshar_count: number;
   waste_lungs: number;
   waste_inner: number;
   waste_outer: number;
-  // treif_count is NOT stored — it is total_heads - halak_count - muchshar_count (computed)
 }
 
 export interface ProductionHeader {
@@ -75,8 +74,8 @@ function toNum(val: any): number {
 }
 
 // ==================== SLAUGHTER PARSER ====================
-// Expected columns: Date | Cows | Bulls | Halak | Muchshar | Treif | Waste Lungs | Waste Inner | Waste Outer
-// Column names may be in Spanish: Fecha | Vacas | Toros | Halak | Kosher | Rej.Pulmon | Rej.Panza | Rej.Cajon
+// Expected columns: Date | Total | Cows | Bulls | Halak | Muchshar | Treif | Waste Lungs | Waste Inner | Waste Outer
+// Column names may be in Spanish: Fecha | Total | Vacas | Toros | Halak | Kosher | Rej.Pulmon | Rej.Panza | Rej.Cajon
 
 export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
   const workbook = XLSX.read(buffer, { type: 'array', cellDates: true });
@@ -109,6 +108,7 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
       continue;
     }
 
+    const totalFromFile = toNum(row[colMap.total]);
     const cows = toNum(row[colMap.cows]);
     const bulls = toNum(row[colMap.bulls]);
     const halak = toNum(row[colMap.halak]);
@@ -117,24 +117,26 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
     const wasteLungs = toNum(row[colMap.wasteLungs]);
     const wasteInner = toNum(row[colMap.wasteInner]);
     const wasteOuter = toNum(row[colMap.wasteOuter]);
-    const totalHeads = cows + bulls;
 
-    if (totalHeads === 0) {
-      errors.push(`Row ${i + 1}: Total heads is 0 (cows=${cows}, bulls=${bulls}), skipping`);
+    // Use total from file if present, otherwise fallback to cows + bulls
+    const totalSlaughtered = totalFromFile > 0 ? totalFromFile : cows + bulls;
+
+    if (totalSlaughtered === 0) {
+      errors.push(`Row ${i + 1}: Total slaughtered is 0, skipping`);
       continue;
     }
 
-    // Validation: halak + muchshar + treif should equal total heads
+    // Validation: halak + muchshar + treif should equal total slaughtered
     const kosherSum = halak + muchshar + treif;
-    if (kosherSum !== totalHeads) {
-      errors.push(`Row ${i + 1}: Kosher split mismatch: halak(${halak})+muchshar(${muchshar})+treif(${treif})=${kosherSum} != total(${totalHeads})`);
+    if (kosherSum !== totalSlaughtered) {
+      errors.push(`Row ${i + 1}: Kosher split mismatch: halak(${halak})+muchshar(${muchshar})+treif(${treif})=${kosherSum} != total(${totalSlaughtered})`);
     }
 
     rows.push({
       date: dateStr,
       cows_count: cows,
       bulls_count: bulls,
-      total_heads: totalHeads,
+      total_slaughtered: totalSlaughtered,
       halak_count: halak,
       muchshar_count: muchshar,
       waste_lungs: wasteLungs,
@@ -147,10 +149,33 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
 }
 
 function detectSlaughterColumns(header: any[]): Record<string, number> {
-  // Default positional mapping
-  const defaults = { date: 0, cows: 1, bulls: 2, halak: 3, muchshar: 4, treif: 5, wasteLungs: 6, wasteInner: 7, wasteOuter: 8 };
+  // Default positional mapping (10 columns: Date | Total | Cows | Bulls | ...)
+  const defaults = { date: 0, total: 1, cows: 2, bulls: 3, halak: 4, muchshar: 5, treif: 6, wasteLungs: 7, wasteInner: 8, wasteOuter: 9 };
 
   if (!header || header.length === 0) return defaults;
+
+  // If file has 9 columns (old format without Total), shift defaults
+  if (header.length <= 9) {
+    const old = { date: 0, total: -1, cows: 1, bulls: 2, halak: 3, muchshar: 4, treif: 5, wasteLungs: 6, wasteInner: 7, wasteOuter: 8 };
+    // Still try header detection below, but start with old defaults
+    const map = { ...old };
+    const normalized = header.map((h: any) => String(h || '').toLowerCase().trim());
+
+    for (let i = 0; i < normalized.length; i++) {
+      const h = normalized[i];
+      if (h.includes('fecha') || h.includes('date') || h.includes('תאריך')) map.date = i;
+      else if (h.includes('סהכ') || h.includes('סה"כ') || h.includes('total') || h.includes('כמות')) map.total = i;
+      else if (h.includes('vaca') || h.includes('cow') || h.includes('פרות')) map.cows = i;
+      else if (h.includes('toro') || h.includes('bull') || h.includes('שוורים')) map.bulls = i;
+      else if (h.includes('halak') || h.includes('חלק')) map.halak = i;
+      else if (h.includes('kosher') || h.includes('muchshar') || h.includes('מוכשר')) map.muchshar = i;
+      else if (h.includes('treif') || h.includes('טריף')) map.treif = i;
+      else if (h.includes('pulmon') || h.includes('lung') || h.includes('ריאות')) map.wasteLungs = i;
+      else if (h.includes('panza') || h.includes('inner') || h.includes('כרס')) map.wasteInner = i;
+      else if (h.includes('cajon') || h.includes('outer') || h.includes('כללי')) map.wasteOuter = i;
+    }
+    return map;
+  }
 
   const map = { ...defaults };
   const normalized = header.map((h: any) => String(h || '').toLowerCase().trim());
@@ -158,6 +183,7 @@ function detectSlaughterColumns(header: any[]): Record<string, number> {
   for (let i = 0; i < normalized.length; i++) {
     const h = normalized[i];
     if (h.includes('fecha') || h.includes('date') || h.includes('תאריך')) map.date = i;
+    else if (h.includes('סהכ') || h.includes('סה"כ') || h.includes('total') || h.includes('כמות')) map.total = i;
     else if (h.includes('vaca') || h.includes('cow') || h.includes('פרות')) map.cows = i;
     else if (h.includes('toro') || h.includes('bull') || h.includes('שוורים')) map.bulls = i;
     else if (h.includes('halak') || h.includes('חלק')) map.halak = i;

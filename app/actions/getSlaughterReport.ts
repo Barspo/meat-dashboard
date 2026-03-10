@@ -97,7 +97,7 @@ export async function getSlaughterReport(seasonId: number | null): Promise<Slaug
       `SELECT f.id as factory_id,
               COALESCE(f.name_hebrew, f.name_english) as factory_name,
               c.name_hebrew as country_name_hebrew,
-              COALESCE(SUM(sb.cows_count + sb.bulls_count), 0) as total,
+              COALESCE(SUM(sb.total_slaughtered), 0) as total,
               COALESCE(SUM(sb.halak_count), 0) as halak,
               COALESCE(SUM(sb.muchshar_count), 0) as muchshar,
               COALESCE(SUM(COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)), 0) as treif
