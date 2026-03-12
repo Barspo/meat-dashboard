@@ -138,23 +138,23 @@ export async function getAlerts(params: {
                COALESCE(f.name_hebrew, f.name_english) AS factory_name,
                sb.total_slaughtered,
                sb.halak_count, sb.muchshar_count,
-               COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0) AS waste_total
+               COALESCE(sb.waste_count, 0) AS waste_count
         FROM slaughter_batches sb
         JOIN factories f ON sb.factory_id = f.id
         WHERE sb.total_slaughtered <> (
-          sb.halak_count + sb.muchshar_count +
-          COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)
+          sb.halak_count + sb.muchshar_count + COALESCE(sb.waste_count, 0)
         ) ${q3bW}
         ORDER BY sb.date DESC
       `, q3bP);
 
       for (const r of totalMismatch.rows as any[]) {
         const total = Number(r.total_slaughtered);
-        const split = Number(r.halak_count) + Number(r.muchshar_count) + Number(r.waste_total);
+        const wc = Number(r.waste_count);
+        const split = Number(r.halak_count) + Number(r.muchshar_count) + wc;
         alerts.push({
           id: `an-total-${r.id}`,
           name: 'אי התאמה בסה״כ שחיטות',
-          detail: `${r.factory_name} | ${r.date} — סה״כ: ${total}, חלוקה: ${split} (חלק ${r.halak_count} + מוכשר ${r.muchshar_count} + טרף ${r.waste_total})`,
+          detail: `${r.factory_name} | ${r.date} — סה״כ: ${total}, חלוקה: ${split} (חלק ${r.halak_count} + מוכשר ${r.muchshar_count} + טרף ${wc})`,
           type: 'anomaly',
           type_label: 'נתונים חריגים',
           date: r.date,

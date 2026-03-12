@@ -11,12 +11,12 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
     const placeholders: string[] = [];
     
     rows.forEach((row, index) => {
-      const i = index * 14; // 14 פרמטרים לכל שורה
+      const i = index * 15; // 15 פרמטרים לכל שורה
 
       placeholders.push(`(
         $${i+1}, $${i+2}, $${i+3}, $${i+4}, $${i+5},
-        $${i+6}, $${i+7}, $${i+8}, $${i+9},
-        $${i+10}, $${i+11}, $${i+12}, $${i+13}, $${i+14}
+        $${i+6}, $${i+7}, $${i+8}, $${i+9}, $${i+10},
+        $${i+11}, $${i+12}, $${i+13}, $${i+14}, $${i+15}
       )`);
 
       values.push(
@@ -27,6 +27,7 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
         Number(row.bulls) || 0,
         Number(row.halak) || 0,
         Number(row.kosher) || 0,
+        Number(row.waste_count) || 0,
         Number(row.waste_lungs) || 0,
         Number(row.waste_inner) || 0,
         Number(row.waste_outer) || 0,
@@ -41,7 +42,7 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
       INSERT INTO slaughter_batches (
         factory_id, date, total_slaughtered, cows_count, bulls_count,
         halak_count, muchshar_count,
-        waste_lungs, waste_inner, waste_outer,
+        waste_count, waste_lungs, waste_inner, waste_outer,
         halak_quarters, kosher_quarters,
         halak_weight_kg, kosher_weight_kg
       )
@@ -53,6 +54,7 @@ export async function uploadSlaughterData(factoryId: string, rows: any[], fileNa
         bulls_count = EXCLUDED.bulls_count,
         halak_count = EXCLUDED.halak_count,
         muchshar_count = EXCLUDED.muchshar_count,
+        waste_count = EXCLUDED.waste_count,
         waste_lungs = EXCLUDED.waste_lungs,
         waste_inner = EXCLUDED.waste_inner,
         waste_outer = EXCLUDED.waste_outer,

@@ -49,10 +49,10 @@ export async function uploadSlaughter(
     for (let i = 0; i < parsed.rows.length; i++) {
       const row = parsed.rows[i];
 
-      // Mismatch warning: total_slaughtered should equal halak+muchshar+waste
-      const accounted = row.halak_count + row.muchshar_count + row.waste_lungs + row.waste_inner + row.waste_outer;
+      // Mismatch warning: total_slaughtered should equal halak+muchshar+waste_count (column G)
+      const accounted = row.halak_count + row.muchshar_count + row.waste_count;
       if (row.total_slaughtered !== accounted) {
-        warnings.push(`שורה ${i + 1} (${row.date}): סה״כ שחיטות ${row.total_slaughtered} לא מתאים לחלוקה ${accounted} (הלק+מוכשר+פחתים)`);
+        warnings.push(`שורה ${i + 1} (${row.date}): סה״כ שחיטות ${row.total_slaughtered} לא מתאים לחלוקה ${accounted} (חלק ${row.halak_count} + מוכשר ${row.muchshar_count} + טרף ${row.waste_count})`);
       }
 
       try {
@@ -61,14 +61,15 @@ export async function uploadSlaughter(
             factory_id, date, total_slaughtered,
             cows_count, bulls_count,
             halak_count, muchshar_count,
-            waste_lungs, waste_inner, waste_outer
-          ) VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, $9, $10)
+            waste_count, waste_lungs, waste_inner, waste_outer
+          ) VALUES ($1, $2::date, $3, $4, $5, $6, $7, $8, $9, $10, $11)
           ON CONFLICT (factory_id, date) DO UPDATE SET
             total_slaughtered = EXCLUDED.total_slaughtered,
             cows_count = EXCLUDED.cows_count,
             bulls_count = EXCLUDED.bulls_count,
             halak_count = EXCLUDED.halak_count,
             muchshar_count = EXCLUDED.muchshar_count,
+            waste_count = EXCLUDED.waste_count,
             waste_lungs = EXCLUDED.waste_lungs,
             waste_inner = EXCLUDED.waste_inner,
             waste_outer = EXCLUDED.waste_outer
@@ -76,7 +77,7 @@ export async function uploadSlaughter(
           factoryId, row.date, row.total_slaughtered,
           row.cows_count, row.bulls_count,
           row.halak_count, row.muchshar_count,
-          row.waste_lungs, row.waste_inner, row.waste_outer,
+          row.waste_count, row.waste_lungs, row.waste_inner, row.waste_outer,
         ]);
         inserted++;
       } catch (rowError: any) {

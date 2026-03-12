@@ -9,6 +9,7 @@ export interface SlaughterRow {
   total_slaughtered: number;  // from file (independent field)
   halak_count: number;
   muchshar_count: number;
+  waste_count: number;    // column G — total waste (treif)
   waste_lungs: number;
   waste_inner: number;
   waste_outer: number;
@@ -113,7 +114,7 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
     const bulls = toNum(row[colMap.bulls]);
     const halak = toNum(row[colMap.halak]);
     const muchshar = toNum(row[colMap.muchshar]);
-    const treif = toNum(row[colMap.treif]); // read for validation only, not stored
+    const wasteCount = toNum(row[colMap.treif]); // column G — total waste (treif)
     const wasteLungs = toNum(row[colMap.wasteLungs]);
     const wasteInner = toNum(row[colMap.wasteInner]);
     const wasteOuter = toNum(row[colMap.wasteOuter]);
@@ -126,10 +127,10 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
       continue;
     }
 
-    // Validation: halak + muchshar + treif should equal total slaughtered
-    const kosherSum = halak + muchshar + treif;
+    // Validation: halak + muchshar + waste_count (column G) should equal total slaughtered
+    const kosherSum = halak + muchshar + wasteCount;
     if (kosherSum !== totalSlaughtered) {
-      errors.push(`Row ${i + 1}: Kosher split mismatch: halak(${halak})+muchshar(${muchshar})+treif(${treif})=${kosherSum} != total(${totalSlaughtered})`);
+      errors.push(`Row ${i + 1}: Kosher split mismatch: halak(${halak})+muchshar(${muchshar})+treif(${wasteCount})=${kosherSum} != total(${totalSlaughtered})`);
     }
 
     rows.push({
@@ -139,6 +140,7 @@ export function parseSlaughterExcel(buffer: ArrayBuffer): ParsedSlaughterData {
       total_slaughtered: totalSlaughtered,
       halak_count: halak,
       muchshar_count: muchshar,
+      waste_count: wasteCount,
       waste_lungs: wasteLungs,
       waste_inner: wasteInner,
       waste_outer: wasteOuter,

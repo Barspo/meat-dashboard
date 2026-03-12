@@ -569,14 +569,18 @@ export default function SettingsPage() {
                       <td className="px-6 py-3 text-slate-700">{k.name_hebrew}</td>
                       <td className="px-6 py-3">
                         {(() => {
-                          const isHalak = (k.family_name_english || '').toLowerCase() === 'halak';
+                          const fam = (k.family_name_english || '').toLowerCase();
+                          const isHalak = fam === 'halak';
+                          const isMuchshar = fam === 'muchshar' || fam === 'kosher';
+                          const badgeStyle = isHalak
+                            ? { color: '#cc2200', background: 'rgba(204,34,0,0.08)', borderColor: '#cc2200' }
+                            : isMuchshar
+                            ? { color: '#15803d', background: 'rgba(21,128,61,0.08)', borderColor: '#15803d' }
+                            : { color: '#1e293b', background: 'rgba(30,41,59,0.08)', borderColor: '#64748b' };
                           return (
                             <span
                               className="text-xs px-2.5 py-1 rounded-full font-bold border"
-                              style={isHalak
-                                ? { color: '#cc2200', background: 'rgba(204,34,0,0.08)', borderColor: '#cc2200' }
-                                : { color: '#15803d', background: 'rgba(21,128,61,0.08)', borderColor: '#15803d' }
-                              }
+                              style={badgeStyle}
                             >
                               {k.family_name_hebrew || k.family_name_english}
                             </span>
