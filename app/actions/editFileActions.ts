@@ -12,6 +12,7 @@ export interface UpdateSlaughterData {
   bulls_count: number;
   halak_count: number;
   muchshar_count: number;
+  waste_count: number;
   waste_lungs: number;
   waste_inner: number;
   waste_outer: number;
@@ -31,15 +32,16 @@ export async function updateSlaughterBatch(
         bulls_count     = $5,
         halak_count     = $6,
         muchshar_count  = $7,
-        waste_lungs     = $8,
-        waste_inner     = $9,
-        waste_outer     = $10
-       WHERE id = $11`,
+        waste_count     = $8,
+        waste_lungs     = $9,
+        waste_inner     = $10,
+        waste_outer     = $11
+       WHERE id = $12`,
       [
         data.date, data.factory_id,
         data.total_slaughtered, data.cows_count, data.bulls_count,
         data.halak_count, data.muchshar_count,
-        data.waste_lungs, data.waste_inner, data.waste_outer,
+        data.waste_count, data.waste_lungs, data.waste_inner, data.waste_outer,
         id,
       ]
     );

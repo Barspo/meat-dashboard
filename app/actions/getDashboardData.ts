@@ -37,7 +37,7 @@ export async function getDashboardData(): Promise<DashboardData | null> {
         (SELECT COUNT(DISTINCT wo.factory_id)
          FROM work_orders wo
          WHERE wo.production_date >= CURRENT_DATE - INTERVAL '30 days') as active_factories,
-        (SELECT COALESCE(SUM(COALESCE(waste_lungs, 0) + COALESCE(waste_inner, 0) + COALESCE(waste_outer, 0)), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_waste,
+        (SELECT COALESCE(SUM(COALESCE(waste_count, 0)), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_waste,
         (SELECT COALESCE(SUM(total_slaughtered), 0) FROM slaughter_batches WHERE date >= CURRENT_DATE - INTERVAL '30 days') as total_slaughtered_for_waste
     `;
     const kpiResult = await query(kpiSql);

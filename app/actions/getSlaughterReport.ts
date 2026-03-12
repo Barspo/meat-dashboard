@@ -100,7 +100,7 @@ export async function getSlaughterReport(seasonId: number | null): Promise<Slaug
               COALESCE(SUM(sb.total_slaughtered), 0) as total,
               COALESCE(SUM(sb.halak_count), 0) as halak,
               COALESCE(SUM(sb.muchshar_count), 0) as muchshar,
-              COALESCE(SUM(COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)), 0) as treif
+              COALESCE(SUM(COALESCE(sb.waste_count, 0)), 0) as treif
        FROM factories f
        JOIN slaughter_batches sb ON sb.factory_id = f.id
        LEFT JOIN countries c ON f.country_id = c.id

@@ -628,6 +628,7 @@ function EditSlaughterModal({
   const [bullsCount, setBullsCount] = useState(String(row.bulls_count));
   const [halakCount, setHalakCount] = useState(String(row.halak_count));
   const [muchsharCount, setMuchsharCount] = useState(String(row.muchshar_count));
+  const [wasteCount, setWasteCount] = useState(String(row.waste_total));
   const [wasteLungs, setWasteLungs] = useState(String(row.waste_lungs));
   const [wasteInner, setWasteInner] = useState(String(row.waste_inner));
   const [wasteOuter, setWasteOuter] = useState(String(row.waste_outer));
@@ -661,6 +662,7 @@ function EditSlaughterModal({
         bulls_count: Number(bullsCount),
         halak_count: Number(halakCount),
         muchshar_count: Number(muchsharCount),
+        waste_count: Number(wasteCount),
         waste_lungs: Number(wasteLungs),
         waste_inner: Number(wasteInner),
         waste_outer: Number(wasteOuter),
@@ -745,6 +747,10 @@ function EditSlaughterModal({
 
           {/* Row 4: waste */}
           <div>
+            <div className="mb-3">
+              <label className={labelCls}>סה״כ טרף</label>
+              <input type="number" min={0} value={wasteCount} onChange={e => setWasteCount(e.target.value)} className={inputCls} />
+            </div>
             <p className="text-xs font-semibold text-slate-500 mb-2">טרף (פירוט)</p>
             <div className="grid grid-cols-3 gap-4">
               <div>

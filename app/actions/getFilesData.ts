@@ -70,7 +70,7 @@ export async function getFilesData(startDate: string, endDate: string): Promise<
         COALESCE(sb.waste_lungs, 0) AS waste_lungs,
         COALESCE(sb.waste_inner, 0) AS waste_inner,
         COALESCE(sb.waste_outer, 0) AS waste_outer,
-        (COALESCE(sb.waste_lungs,0) + COALESCE(sb.waste_inner,0) + COALESCE(sb.waste_outer,0)) AS waste_total,
+        COALESCE(sb.waste_count, 0) AS waste_total,
         wo.production_data_id AS linked_production_id,
         pd.date::text AS linked_production_date
       FROM slaughter_batches sb

@@ -23,7 +23,7 @@ export async function getFactoryPerformance(startDate: string, endDate: string) 
         SUM(bulls_count)                                                         AS bulls,
         SUM(halak_count)                                                         AS halak,
         SUM(muchshar_count)                                                      AS muchshar,
-        SUM(COALESCE(waste_lungs,0) + COALESCE(waste_inner,0) + COALESCE(waste_outer,0)) AS waste_total,
+        SUM(COALESCE(waste_count,0))                                                    AS waste_total,
         SUM(COALESCE(waste_lungs,0))                                             AS waste1,
         SUM(COALESCE(waste_inner,0))                                             AS waste2,
         SUM(COALESCE(waste_outer,0))                                             AS waste3
