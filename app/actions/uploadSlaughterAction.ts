@@ -56,7 +56,7 @@ export async function uploadSlaughter(
       }
 
       try {
-        await query(`
+        const sbResult = await query(`
           INSERT INTO slaughter_batches (
             factory_id, date, total_slaughtered,
             cows_count, bulls_count,
@@ -73,12 +73,23 @@ export async function uploadSlaughter(
             waste_lungs = EXCLUDED.waste_lungs,
             waste_inner = EXCLUDED.waste_inner,
             waste_outer = EXCLUDED.waste_outer
+          RETURNING id
         `, [
           factoryId, row.date, row.total_slaughtered,
           row.cows_count, row.bulls_count,
           row.halak_count, row.muchshar_count,
           row.waste_count, row.waste_lungs, row.waste_inner, row.waste_outer,
         ]);
+
+        // Auto-create work_order (waiting for production)
+        if (sbResult.rows.length > 0) {
+          await query(`
+            INSERT INTO work_orders (slaughter_batch_id)
+            VALUES ($1)
+            ON CONFLICT (slaughter_batch_id) DO NOTHING
+          `, [sbResult.rows[0].id]);
+        }
+
         inserted++;
       } catch (rowError: any) {
         errors.push(`Date ${row.date}: ${rowError.message}`);
