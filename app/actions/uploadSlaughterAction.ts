@@ -1,6 +1,6 @@
 'use server';
 
-import { query } from '@/lib/db';
+import { query, withTransaction } from '@/lib/db';
 import { parseSlaughterExcel, SlaughterRow } from '@/lib/parseExcel';
 
 export interface SlaughterUploadResult {
@@ -34,29 +34,31 @@ export async function uploadSlaughter(
       return { success: false, rowsInserted: 0, rowsSkipped: 0, errors: parsed.errors.length > 0 ? parsed.errors : ['No valid rows found in file'], warnings: [] };
     }
 
-    // Log the upload attempt
-    const logResult = await query(
-      `INSERT INTO import_logs (file_name, upload_type, factory_id, status) VALUES ($1, 'slaughter', $2, 'processing') RETURNING id`,
-      [fileName, factoryId]
-    );
-    const logId = logResult.rows[0].id;
-
-    let inserted = 0;
-    let skipped = 0;
-    const errors = [...parsed.errors];
+    // Collect warnings before transaction (validation only)
     const warnings: string[] = [];
-
     for (let i = 0; i < parsed.rows.length; i++) {
       const row = parsed.rows[i];
-
-      // Mismatch warning: total_slaughtered should equal halak+muchshar+waste_count (column G)
       const accounted = row.halak_count + row.muchshar_count + row.waste_count;
       if (row.total_slaughtered !== accounted) {
         warnings.push(`שורה ${i + 1} (${row.date}): סה״כ שחיטות ${row.total_slaughtered} לא מתאים לחלוקה ${accounted} (חלק ${row.halak_count} + מוכשר ${row.muchshar_count} + טרף ${row.waste_count})`);
       }
+    }
 
-      try {
-        const sbResult = await query(`
+    // All DB mutations inside a transaction
+    const result = await withTransaction(async (client) => {
+      const logResult = await client.query(
+        `INSERT INTO import_logs (file_name, upload_type, factory_id, status) VALUES ($1, 'slaughter', $2, 'processing') RETURNING id`,
+        [fileName, factoryId]
+      );
+      const logId = logResult.rows[0].id;
+
+      let inserted = 0;
+      const errors = [...parsed.errors];
+
+      for (let i = 0; i < parsed.rows.length; i++) {
+        const row = parsed.rows[i];
+
+        const sbResult = await client.query(`
           INSERT INTO slaughter_batches (
             factory_id, date, total_slaughtered,
             cows_count, bulls_count,
@@ -83,7 +85,7 @@ export async function uploadSlaughter(
 
         // Auto-create work_order (waiting for production)
         if (sbResult.rows.length > 0) {
-          await query(`
+          await client.query(`
             INSERT INTO work_orders (slaughter_batch_id)
             VALUES ($1)
             ON CONFLICT (slaughter_batch_id) DO NOTHING
@@ -91,20 +93,18 @@ export async function uploadSlaughter(
         }
 
         inserted++;
-      } catch (rowError: any) {
-        errors.push(`Date ${row.date}: ${rowError.message}`);
-        skipped++;
       }
-    }
 
-    // Update log
-    const status = errors.length === 0 ? 'success' : (inserted > 0 ? 'partial' : 'error');
-    await query(
-      `UPDATE import_logs SET status = $1, error_details = $2 WHERE id = $3`,
-      [status, errors.length > 0 ? errors.join('\n') : null, logId]
-    );
+      const status = errors.length === 0 ? 'success' : (inserted > 0 ? 'partial' : 'error');
+      await client.query(
+        `UPDATE import_logs SET status = $1, error_details = $2 WHERE id = $3`,
+        [status, errors.length > 0 ? errors.join('\n') : null, logId]
+      );
 
-    return { success: inserted > 0, rowsInserted: inserted, rowsSkipped: skipped, errors, warnings };
+      return { inserted, errors };
+    });
+
+    return { success: result.inserted > 0, rowsInserted: result.inserted, rowsSkipped: parsed.rows.length - result.inserted, errors: result.errors, warnings };
   } catch (error: any) {
     return { success: false, rowsInserted: 0, rowsSkipped: 0, errors: [error.message], warnings: [] };
   }

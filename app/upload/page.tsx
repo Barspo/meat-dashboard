@@ -698,12 +698,19 @@ function StepPreview({
               <div className="bg-orange-50 border border-orange-200 rounded-xl p-3">
                 <div className="flex items-center gap-2 text-xs font-bold text-orange-700 mb-2">
                   <AlertTriangle size={14} />
-                  ברקודים לא מוכרים במערכת (ידולגו בהעלאה):
+                  ברקודים לא מוכרים במערכת ({productionPreview.unknownItemIds.length} ברקודים ידולגו בהעלאה):
                 </div>
                 <div className="flex flex-wrap gap-2">
-                  {productionPreview.unknownItemIds.map(id => (
-                    <span key={id} className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs font-mono">{id}</span>
-                  ))}
+                  {productionPreview.unknownItemIds.map(id => {
+                    const rowNums = productionPreview.rows
+                      .filter(r => r.item_id === id)
+                      .map(r => r.row_number);
+                    return (
+                      <span key={id} className="px-2 py-0.5 bg-orange-100 text-orange-800 rounded text-xs font-mono">
+                        {id} (שורה {rowNums.join(', ')})
+                      </span>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -771,7 +778,11 @@ function StepPreview({
           className="flex items-center gap-2 px-6 py-2.5 bg-blue-600 text-white rounded-xl font-bold text-sm hover:bg-blue-700 transition-colors disabled:opacity-50"
         >
           {loading ? <Loader2 size={16} className="animate-spin" /> : <Upload size={16} />}
-          {loading ? 'מעלה...' : 'העלה נתונים'}
+          {loading ? 'מעלה...' : (
+            !isSlaughter && productionPreview?.unknownItemIds?.length
+              ? `העלה ${productionPreview.rows.filter(r => !productionPreview.unknownItemIds.includes(r.item_id)).length} מוצרים מוכרים (${productionPreview.unknownItemIds.length} ידולגו)`
+              : 'העלה נתונים'
+          )}
         </button>
       </div>
     </div>
@@ -823,6 +834,7 @@ function StepResult({
         <p className="text-sm opacity-70">
           {rowsInserted > 0 && `${rowsInserted} שורות נטענו בהצלחה`}
           {isSlaughter && slaughterResult && slaughterResult.rowsSkipped > 0 && ` | ${slaughterResult.rowsSkipped} שורות דולגו`}
+          {!isSlaughter && productionResult && productionResult.rowsSkipped > 0 && ` | ${productionResult.rowsSkipped} מוצרים עם ברקוד לא מוכר דולגו`}
         </p>
 
         {!isSlaughter && productionResult?.productionDataId && (
