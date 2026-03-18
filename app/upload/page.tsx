@@ -308,7 +308,7 @@ function StepType({ onSelect }: { onSelect: (t: UploadType) => void }) {
               <Beef size={32} className="text-amber-600" />
             </div>
             <h3 className="text-xl font-black text-slate-800 mb-2">דוח שחיטה</h3>
-            <p className="text-sm text-slate-400">העלאת נתוני שחיטה יומיים - סה״כ שחיטות, כשרות ופחת</p>
+            <p className="text-sm text-slate-400">העלאת נתוני שחיטה יומיים - סה״כ שחיטות, כשרות וטרף</p>
           </button>
           <button
             onClick={() => setSampleModal('slaughter')}
@@ -633,9 +633,10 @@ function StepPreview({
                     <th className="px-3 py-2">סה&quot;כ</th>
                     <th className="px-3 py-2">חלק</th>
                     <th className="px-3 py-2">מוכשר</th>
-                    <th className="px-3 py-2">פחת ריאות</th>
-                    <th className="px-3 py-2">פחת פנים</th>
-                    <th className="px-3 py-2">פחת חוץ</th>
+                    <th className="px-3 py-2">טרף</th>
+                    <th className="px-3 py-2">טרף ריאות</th>
+                    <th className="px-3 py-2">טרף כרסים</th>
+                    <th className="px-3 py-2">טרף אחר</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
@@ -647,6 +648,7 @@ function StepPreview({
                       <td className="px-3 py-2 tabular-nums font-bold">{row.total_slaughtered}</td>
                       <td className="px-3 py-2 tabular-nums">{row.halak_count}</td>
                       <td className="px-3 py-2 tabular-nums">{row.muchshar_count}</td>
+                      <td className="px-3 py-2 tabular-nums font-bold">{row.waste_count}</td>
                       <td className="px-3 py-2 tabular-nums">{row.waste_lungs}</td>
                       <td className="px-3 py-2 tabular-nums">{row.waste_inner}</td>
                       <td className="px-3 py-2 tabular-nums">{row.waste_outer}</td>
@@ -968,8 +970,8 @@ function SampleReportModal({ type, onClose }: { type: UploadType; onClose: () =>
                   <li><span className="font-bold text-slate-800">Total</span> — סה״כ שחיטות</li>
                   <li><span className="font-bold text-slate-800">Cows / Bulls</span> — מספר פרות / שוורים</li>
                   <li><span className="font-bold text-slate-800">Halak / Muchshar</span> — כשרות חלק / מוכשר</li>
-                  <li><span className="font-bold text-slate-800">Treif</span> — טריף (מחושב, לא נשמר)</li>
-                  <li><span className="font-bold text-slate-800">Waste Lungs/Inner/Outer</span> — פחת ריאות / פנים / חוץ</li>
+                  <li><span className="font-bold text-slate-800">Treif</span> — סה״כ טרף (עמודה G)</li>
+                  <li><span className="font-bold text-slate-800">Waste Lungs/Inner/Outer</span> — טרף ריאות / טרף כרסים / טרף אחר (אופציונלי)</li>
                 </ul>
               </div>
             </>
